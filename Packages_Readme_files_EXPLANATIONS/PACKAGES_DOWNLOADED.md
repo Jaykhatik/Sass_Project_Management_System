@@ -12,9 +12,9 @@ This document provides a detailed, simple explanation of all the packages requir
 | 2 | `@reduxjs/toolkit` & `react-redux` | ✅ Installed |
 | 3 | `lucide-react` | ✅ Installed |
 | 4 | `@types/node` & `@types/react` | ✅ Installed |
-| 5 | `clsx` & `tailwind-merge` | ⏳ Pending |
-| 6 | `shadcn/ui` | ⏳ Pending |
-| 7 | `zod` | ⏳ Pending |
+| 5 | `clsx` & `tailwind-merge` | ✅ Installed |
+| 6 | `shadcn/ui` | ✅ Installed |
+| 7 | `zod` | ✅ Installed |
 
 ---
 
@@ -32,7 +32,7 @@ This document provides a detailed, simple explanation of all the packages requir
 
 ## 🎨 Styling & User Interface
 
-### 3. [ ] `clsx` & `tailwind-merge`
+### 3. [x] `clsx` & `tailwind-merge`
 *   **What they are:** Little helpers for Tailwind CSS. They combine CSS classes together safely.
 *   **Why you need them:** In React, you often want buttons to change color based on their state (e.g., turning red if it's a "Delete" button). Sometimes, you accidentally apply conflicting rules like `bg-blue-500` and `bg-red-500` at the same time. These two packages work together to delete the wrong one and keep the right one, ensuring your UI doesn't break when combining styles.
 
@@ -40,13 +40,13 @@ This document provides a detailed, simple explanation of all the packages requir
 *   **What it is:** A massive collection of beautiful, clean icons (like home buttons, trash cans, settings gears).
 *   **Why you need it:** You need icons to make your dashboard look like a premium SaaS product. `lucide-react` is the official icon set used by `shadcn/ui`, and it lets you add an icon just by typing `<TrashIcon />`.
 
-### 5. [ ] `shadcn/ui` (The component library)
+### 5. [x] `shadcn/ui` (The component library)
 *   **What it is:** A collection of pre-designed, professional-looking building blocks (buttons, popups, menus, cards). 
 *   **Why you need it:** Instead of spending hours designing a calendar dropdown or a fancy button from scratch, `shadcn/ui` gives you the code for them instantly. You use the command `npx shadcn-ui@latest add button input...` to literally copy-paste perfect, accessible UI elements directly into your project so you can focus on making the app work, not just making it look pretty.
 
 ## 🛡️ Safety & Validation
 
-### 6. [ ] `zod`
+### 6. [x] `zod`
 *   **What it is:** A strict bouncer for your data. It checks information to make sure it's exactly what you expect.
 *   **Why you need it:** If a user tries to create a task, `zod` checks: "Is the title at least 3 letters long? Is the due date an actual date? Is the priority set to High, Medium, or Low?" If the user types something wrong, `zod` catches it immediately and throws a helpful error *before* it accidentally crashes your database.
 
