@@ -44,8 +44,8 @@ This platform enables organizations to:
 | Database | PostgreSQL 15+ |
 | ORM | Prisma |
 | Auth | NextAuth.js v5 |
-| Styling | Tailwind CSS + shadcn/ui |
-| State | Zustand + React Query (TanStack) |
+| Styling | Custom CSS (CSS variables, modular stylesheets) |
+| State | Redux Toolkit (with RTK Query for data fetching) |
 | File Storage | AWS S3 / Cloudflare R2 |
 | Email | Resend |
 | Payments | Stripe |
@@ -136,7 +136,6 @@ saas-pm-system/
 ├── package.json
 ├── tsconfig.json
 ├── next.config.ts
-├── tailwind.config.ts
 ├── .env.example
 │
 ├── prisma/
@@ -164,13 +163,23 @@ saas-pm-system/
 │   │   └── layout.tsx
 │   │
 │   ├── components/               ← React components
-│   │   ├── ui/                   ← shadcn/ui primitives
+│   │   ├── ui/                   ← Custom UI primitives (buttons, inputs, cards, etc.)
 │   │   ├── auth/                 ← Auth forms
 │   │   ├── workspace/            ← Workspace UI
 │   │   ├── project/              ← Project UI
 │   │   ├── task/                 ← Task UI (board, list, detail)
 │   │   ├── dashboard/            ← Dashboard widgets
 │   │   └── shared/               ← Reusable components
+│   │
+│   ├── styles/                   ← Custom CSS
+│   │   ├── globals.css           ← Global resets & base styles
+│   │   ├── variables.css         ← CSS variables (design tokens)
+│   │   └── components/           ← Per-component stylesheets
+│   │
+│   ├── store/                    ← Redux Toolkit store
+│   │   ├── index.ts              ← Store configuration
+│   │   ├── slices/                ← Feature slices (workspace, ui, etc.)
+│   │   └── api/                  ← RTK Query API slices
 │   │
 │   ├── lib/                      ← Utilities & config
 │   │   ├── db.ts                 ← Prisma client singleton

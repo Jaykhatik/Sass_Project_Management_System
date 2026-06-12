@@ -34,7 +34,7 @@ Authentication is intentionally last so the core product works and is testable b
 
 1. Scaffold the project
    ```bash
-   pnpm create next-app@latest saas-pm --typescript --tailwind --app --src-dir
+   pnpm create next-app@latest saas-pm --typescript --no-tailwind --app --src-dir
    cd saas-pm
    ```
 
@@ -42,18 +42,19 @@ Authentication is intentionally last so the core product works and is testable b
    ```bash
    pnpm add prisma @prisma/client
    pnpm add zod
-   pnpm add @tanstack/react-query
-   pnpm add zustand
-   pnpm add clsx tailwind-merge
+   pnpm add @reduxjs/toolkit react-redux
    pnpm add lucide-react
    pnpm add -D @types/node @types/react
    ```
 
-3. Install and init shadcn/ui
-   ```bash
-   pnpm dlx shadcn-ui@latest init
-   pnpm dlx shadcn-ui@latest add button input label card badge dialog sheet dropdown-menu
+3. Set up custom CSS structure
    ```
+   src/styles/
+   ├── globals.css        ← CSS variables, resets, base styles
+   ├── variables.css       ← design tokens (colors, spacing, typography)
+   └── components/         ← per-component CSS files (optional, or co-located)
+   ```
+   Import `globals.css` and `variables.css` in `src/app/layout.tsx`.
 
 4. Configure path aliases in `tsconfig.json`
    ```json
@@ -80,13 +81,14 @@ Authentication is intentionally last so the core product works and is testable b
        └── services/
    ```
 
-7. Create `src/lib/utils.ts` with `cn()` helper
+7. Create `src/lib/utils.ts` with general utility helpers (no `cn()` needed without Tailwind)
 8. Create `.env.local` from `.env.example`
-9. Set up Git and commit
+9. Set up Redux store (`src/store/index.ts`) with `configureStore`, and wrap the app with `<Provider>` in root layout
+10. Set up Git and commit
 
 ### ✅ Done When
 - `pnpm dev` runs without errors
-- shadcn components render correctly
+- Custom CSS (variables, globals) loads correctly across pages
 - TypeScript shows no errors
 
 ---
@@ -183,7 +185,7 @@ Authentication is intentionally last so the core product works and is testable b
 
 5. Create a placeholder dashboard page (`[workspace]/page.tsx`)
 
-6. Set up React Query provider in root layout
+6. Set up Redux store slices (e.g. `workspaceSlice`, `uiSlice`) and ensure `<Provider store={store}>` wraps the app in root layout
 
 7. Create `src/lib/errors.ts` with `AppError`, `NotFoundError`, `ForbiddenError`
 
@@ -508,7 +510,7 @@ Authentication is intentionally last so the core product works and is testable b
 
 ## Phase 11 — Notifications
 
-**Goal:** In-app notifications for assignments, mentions, comments. No Redis — polling via React Query.
+**Goal:** In-app notifications for assignments, mentions, comments. No Redis — polling via RTK Query.
 
 ### Steps
 
@@ -531,12 +533,24 @@ Authentication is intentionally last so the core product works and is testable b
    - Dropdown list of recent notifications
    - Click navigates to the relevant task
 
-5. Set up polling with React Query
+5. Set up polling with RTK Query
    ```typescript
-   useQuery({
-     queryKey: ["notifications"],
-     queryFn: fetchNotifications,
-     refetchInterval: 30_000, // poll every 30 seconds
+   // src/store/api/notificationsApi.ts
+   export const notificationsApi = createApi({
+     reducerPath: "notificationsApi",
+     baseQuery: fetchBaseQuery({ baseUrl: "/api/v1" }),
+     endpoints: (builder) => ({
+       getNotifications: builder.query<Notification[], void>({
+         query: () => "/notifications",
+         // poll every 30 seconds
+         keepUnusedDataFor: 0,
+       }),
+     }),
+   });
+
+   // In component:
+   const { data } = useGetNotificationsQuery(undefined, {
+     pollingInterval: 30_000,
    });
    ```
 

@@ -346,7 +346,7 @@ CREATE TABLE attachments (
 
 ### `notifications`
 
-In-app notifications (no Redis — polled via React Query).
+In-app notifications (no Redis — polled via RTK Query).
 
 ```sql
 CREATE TABLE notifications (

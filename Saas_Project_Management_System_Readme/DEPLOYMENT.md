@@ -371,6 +371,6 @@ npx @sentry/wizard@latest -i nextjs
 - [ ] Static assets on CDN (Vercel handles this automatically)
 - [ ] `prisma generate` runs at build time (not runtime)
 - [ ] Long-running queries identified via `EXPLAIN ANALYZE`
-- [ ] Notifications polled at reasonable interval (e.g., every 30s with React Query)
+- [ ] Notifications polled at reasonable interval (e.g., every 30s with RTK Query)
 - [ ] File uploads go directly to S3 via presigned URLs (not through Next.js server)
 - [ ] Rate limiting on auth endpoints (table-based, see [AUTH.md](./AUTH.md#security-considerations))
