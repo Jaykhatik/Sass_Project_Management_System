@@ -1,16 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { createSlice } from '@reduxjs/toolkit';
-
-// Placeholder slice — replace with real slices as features are built
-const appSlice = createSlice({
-  name: 'app',
-  initialState: { ready: true },
-  reducers: {},
-});
+import workspaceReducer from './slices/workspaceSlice';
+import uiReducer from './slices/uiSlice';
 
 export const store = configureStore({
   reducer: {
-    app: appSlice.reducer,
+    workspace: workspaceReducer,
+    ui: uiReducer,
   },
 });
 
