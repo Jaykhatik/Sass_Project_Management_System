@@ -85,7 +85,10 @@ export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
           </p>
           {navLinks.map((link) => {
             const Icon = link.icon;
-            const isActive = pathname === link.href;
+            const isActive =
+              link.href === "/dashboard"
+                ? pathname === link.href
+                : pathname.startsWith(link.href);
 
             return (
               <Link

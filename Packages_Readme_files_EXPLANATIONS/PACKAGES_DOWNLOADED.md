@@ -14,7 +14,6 @@ This document provides a detailed, simple explanation of all the packages requir
 | 4 | `@types/node` & `@types/react` | ✅ Installed |
 | 5 | `clsx` & `tailwind-merge` | ✅ Installed |
 | 6 | `shadcn/ui` | ✅ Installed |
-| 7 | `zod` | ✅ Installed |
 
 ---
 
@@ -44,14 +43,8 @@ This document provides a detailed, simple explanation of all the packages requir
 *   **What it is:** A collection of pre-designed, professional-looking building blocks (buttons, popups, menus, cards). 
 *   **Why you need it:** Instead of spending hours designing a calendar dropdown or a fancy button from scratch, `shadcn/ui` gives you the code for them instantly. You use the command `npx shadcn-ui@latest add button input...` to literally copy-paste perfect, accessible UI elements directly into your project so you can focus on making the app work, not just making it look pretty.
 
-## 🛡️ Safety & Validation
-
-### 6. [x] `zod`
-*   **What it is:** A strict bouncer for your data. It checks information to make sure it's exactly what you expect.
-*   **Why you need it:** If a user tries to create a task, `zod` checks: "Is the title at least 3 letters long? Is the due date an actual date? Is the priority set to High, Medium, or Low?" If the user types something wrong, `zod` catches it immediately and throws a helpful error *before* it accidentally crashes your database.
-
 ## 🛠️ Developer Tools
 
-### 7. [x] `@types/node` & `@types/react`
+### 6. [x] `@types/node` & `@types/react`
 *   **What they are:** "Dictionaries" for TypeScript.
 *   **Why you need them:** Since you are using TypeScript, your code editor (like VS Code) needs to know the exact rules and vocabulary of Node.js and React. These packages give your editor "autocomplete" superpowers and will put a red squiggly line under your code if you make a typo, saving you hours of hunting for bugs.

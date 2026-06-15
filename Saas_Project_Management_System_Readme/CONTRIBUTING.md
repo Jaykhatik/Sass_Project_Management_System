@@ -146,13 +146,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
 import { getTask } from "@/server/services/task.service";
 import { getWorkspaceContext } from "@/lib/workspace-context";
-import { z } from "zod";
-
-const updateTaskSchema = z.object({
-  title: z.string().min(1).max(500).optional(),
-  priority: z.enum(["critical", "high", "medium", "low", "none"]).optional(),
-  dueDate: z.string().datetime().nullish(),
-});
 
 interface RouteParams {
   params: { workspace: string; taskId: string };
@@ -173,12 +166,16 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   const { workspace, member } = await getWorkspaceContext(params.workspace);
 
   const body = await req.json();
-  const parsed = updateTaskSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
+  
+  // Validate input manually
+  if (
+    body.title !== undefined &&
+    (typeof body.title !== "string" || body.title.length === 0 || body.title.length > 500)
+  ) {
+    return NextResponse.json({ error: "Title must be between 1 and 500 characters" }, { status: 400 });
   }
 
-  const task = await updateTask(workspace.id, params.taskId, parsed.data);
+  const task = await updateTask(workspace.id, params.taskId, body);
   return NextResponse.json(task);
 }
 ```
@@ -262,7 +259,7 @@ export class PlanLimitError extends AppError {
 
 ## Writing API Routes
 
-1. **Validate input** with Zod before touching the database
+1. **Validate input** before touching the database
 2. **Use workspace context** — never trust client-provided workspaceId
 3. **Return consistent error shapes** `{ error: string, code: string }`
 4. **Handle AppErrors** from services and map to HTTP codes

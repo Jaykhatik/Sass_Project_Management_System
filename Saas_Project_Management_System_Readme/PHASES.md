@@ -41,7 +41,6 @@ Authentication is intentionally last so the core product works and is testable b
 2. Install core dependencies
    ```bash
    pnpm add prisma @prisma/client
-   pnpm add zod
    pnpm add @reduxjs/toolkit react-redux
    pnpm add lucide-react
    pnpm add -D @types/node @types/react
@@ -230,7 +229,7 @@ Authentication is intentionally last so the core product works and is testable b
    - Lists all workspaces the user belongs to
    - "Create workspace" form
 
-6. Add Zod validation schemas for all inputs
+6. Add validation for all inputs
 
 ### ✅ Done When
 - Member list loads from DB
@@ -239,51 +238,56 @@ Authentication is intentionally last so the core product works and is testable b
 
 ---
 
-## Phase 5 — Projects & Boards
+## ✅ Phase 5 — Projects & Boards [COMPLETED]
 
 **Goal:** Create and manage projects, boards, and Kanban columns.
 
 ### Steps
 
-1. Create project service (`src/server/services/project.service.ts`)
+1. ✅ Create project service (`src/server/services/project.service.ts`)
    - `getProjects(workspaceId)`
-   - `createProject(workspaceId, userId, data)`
+   - `createProject(workspaceId, userId, data)` — auto-creates default board + 4 columns
    - `updateProject(workspaceId, id, data)`
    - `archiveProject(workspaceId, id)`
 
-2. Create board & column services
+2. ✅ Create board & column services (`src/server/services/board.service.ts`)
    - `getBoard(workspaceId, boardId)` — with columns + tasks
    - `createColumn(workspaceId, boardId, data)`
    - `updateColumn(workspaceId, id, data)`
    - `reorderColumns(workspaceId, boardId, columnIds)`
+   - `deleteColumn(workspaceId, columnId)`
 
-3. Create API routes for projects, boards, columns
+3. ✅ Create API routes
+   - `GET/POST  /api/projects`
+   - `GET/PATCH/DELETE  /api/projects/[projectId]`
+   - `GET  /api/boards/[boardId]`
+   - `POST/PATCH  /api/boards/[boardId]/columns`
+   - `PATCH/DELETE  /api/boards/[boardId]/columns/[columnId]`
 
-4. Build Projects list page (`[workspace]/projects/page.tsx`)
-   - Grid/list of project cards
-   - Status badge, member count, task count
-   - "New Project" dialog with form
+4. ✅ Build Projects list page (`dashboard/projects/page.tsx`)
+   - Grid of project cards with color bar, status badge, task count, due date
+   - "New Project" dialog with name, description, color picker
 
-5. Build Project detail page (`[workspace]/projects/[projectId]/page.tsx`)
-   - Tab bar: Board | List | Timeline | Settings
-   - Default to Board view
+5. ✅ Build Project detail page (`dashboard/projects/[projectId]/page.tsx`)
+   - Tab bar: Board | List | Settings
 
-6. Build Kanban Board view (`components/project/BoardView.tsx`)
-   - Columns rendered side by side
-   - Task cards inside columns (basic — no drag yet)
-   - "Add column" button
-   - Column header with task count and WIP limit
+6. ✅ Build Kanban Board view (`components/project/BoardView.tsx`)
+   - Columns rendered side by side with color-coded headers
+   - Task cards inside columns
+   - "Add task" inline button per column
+   - Column header with task count and WIP limit display
 
-7. Build List view (`components/project/ListView.tsx`)
-   - Table of tasks with sortable columns
+7. ✅ Build List view (`components/project/ListView.tsx`)
+   - Table of all tasks with status, priority, assignee avatars, due date
 
-8. Build Project settings tab
-   - Edit name, description, dates, color
+8. ✅ Build Project settings tab (`components/project/ProjectSettings.tsx`)
+   - Edit name, description, color
+   - Danger zone — Archive project
 
 ### ✅ Done When
-- Projects list shows all seeded projects
-- Board view renders columns and task cards
-- New project can be created and appears in the list
+- ✅ Projects list shows all seeded projects
+- ✅ Board view renders columns and task cards
+- ✅ New project can be created and appears in the list
 
 ---
 
