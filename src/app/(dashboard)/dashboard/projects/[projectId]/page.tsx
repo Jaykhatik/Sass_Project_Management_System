@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { ProjectDetailClient } from "@/components/project/ProjectDetailClient";
-import { getWorkspaceBySlug } from "@/services/workspaceService";
 import { getProject } from "@/services/projectService";
+import { getPrimaryWorkspaceForUser, getSessionUser } from "@/lib/auth";
 
 interface Props {
   params: Promise<{ projectId: string }>;
@@ -10,7 +10,10 @@ interface Props {
 export async function generateMetadata({ params }: Props) {
   const { projectId } = await params;
   try {
-    const workspace = await getWorkspaceBySlug("demo-workspace");
+    const user = await getSessionUser();
+    if (!user) return { title: "Project" };
+    const workspace = await getPrimaryWorkspaceForUser(user.id);
+    if (!workspace) return { title: "Project" };
     const project = await getProject(workspace.id, projectId);
     return { title: `${project.name} | SaaS Project Management` };
   } catch {
@@ -20,7 +23,10 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function ProjectDetailPage({ params }: Props) {
   const { projectId } = await params;
-  const workspace = await getWorkspaceBySlug("demo-workspace");
+  const user = await getSessionUser();
+  if (!user) notFound();
+  const workspace = await getPrimaryWorkspaceForUser(user.id);
+  if (!workspace) notFound();
 
   let project;
   try {

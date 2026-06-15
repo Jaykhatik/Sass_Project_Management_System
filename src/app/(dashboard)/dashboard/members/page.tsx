@@ -1,13 +1,17 @@
 import { MemberList } from './MemberList';
-import { getAllMembers, getWorkspaceBySlug } from '@/services/workspaceService';
+import { getAllMembers } from '@/services/workspaceService';
+import { getPrimaryWorkspaceForUser, getSessionUser } from '@/lib/auth';
+import { notFound } from 'next/navigation';
 
 export const metadata = {
   title: 'Members | SaaS Project Management',
 };
 
 export default async function MembersPage() {
-  // Hardcoded for now until dynamic routing is implemented
-  const workspace = await getWorkspaceBySlug('demo-workspace');
+  const user = await getSessionUser();
+  if (!user) notFound();
+  const workspace = await getPrimaryWorkspaceForUser(user.id);
+  if (!workspace) notFound();
   const members = await getAllMembers(workspace.id);
   
   return (

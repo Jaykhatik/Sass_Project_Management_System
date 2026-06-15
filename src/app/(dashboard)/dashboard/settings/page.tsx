@@ -1,12 +1,16 @@
 import { SettingsForm } from './SettingsForm';
-import { getWorkspaceBySlug } from '@/services/workspaceService';
+import { getPrimaryWorkspaceForUser, getSessionUser } from '@/lib/auth';
+import { notFound } from 'next/navigation';
 
 export const metadata = {
   title: 'Settings | SaaS Project Management',
 };
 
 export default async function SettingsPage() {
-  const workspace = await getWorkspaceBySlug('demo-workspace');
+  const user = await getSessionUser();
+  if (!user) notFound();
+  const workspace = await getPrimaryWorkspaceForUser(user.id);
+  if (!workspace) notFound();
   
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">

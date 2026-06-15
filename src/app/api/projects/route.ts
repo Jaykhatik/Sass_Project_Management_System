@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { AppError } from "@/lib/errors";
+import { getSessionUserWithRefresh } from "@/lib/auth";
 
 // GET /api/projects?workspaceId=xxx — list all projects
 export async function GET(request: Request) {
   try {
+    const user = await getSessionUserWithRefresh();
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const workspaceId = searchParams.get("workspaceId");
 
@@ -12,6 +21,29 @@ export async function GET(request: Request) {
       return NextResponse.json(
         { error: "workspaceId is required", code: "VALIDATION_ERROR" },
         { status: 400 }
+      );
+    }
+
+    const membership = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId,
+          userId: user.id,
+        },
+      },
+    });
+
+    const ownedWorkspace = await prisma.workspace.findFirst({
+      where: {
+        id: workspaceId,
+        ownerId: user.id,
+      },
+    });
+
+    if (!membership && !ownedWorkspace) {
+      return NextResponse.json(
+        { error: "You do not have access to this workspace", code: "FORBIDDEN" },
+        { status: 403 }
       );
     }
 
@@ -44,8 +76,16 @@ export async function GET(request: Request) {
 // POST /api/projects — create a new project
 export async function POST(request: Request) {
   try {
+    const user = await getSessionUserWithRefresh();
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized", code: "UNAUTHORIZED" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
-    const { workspaceId, userId, name, description, color, startDate, dueDate } = body;
+    const { workspaceId, name, description, color, startDate, dueDate } = body;
 
     if (!workspaceId || typeof workspaceId !== "string") {
       return NextResponse.json(
@@ -54,14 +94,34 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hardcode userId for now (Phase 14 will add auth)
-    const creatorId = userId || "00000000-0000-0000-0000-000000000000";
+    const membership = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId,
+          userId: user.id,
+        },
+      },
+    });
+
+    const ownedWorkspace = await prisma.workspace.findFirst({
+      where: {
+        id: workspaceId,
+        ownerId: user.id,
+      },
+    });
+
+    if (!membership && !ownedWorkspace) {
+      return NextResponse.json(
+        { error: "You do not have access to this workspace", code: "FORBIDDEN" },
+        { status: 403 }
+      );
+    }
 
     const project = await prisma.$transaction(async (tx) => {
       const created = await tx.project.create({
         data: {
           workspaceId,
-          createdById: creatorId,
+          createdById: user.id,
           name: String(name || "").trim(),
           description: typeof description === "string" ? description.trim() : undefined,
           color: color ?? "#6366F1",

@@ -27,7 +27,7 @@ const navLinks = [
 ];
 
 export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
-  const displaySlug = workspaceSlug || "demo-workspace";
+  const displaySlug = workspaceSlug || "Workspace";
   const isSidebarOpen = useSelector((state: RootState) => state.ui.isSidebarOpen);
   const dispatch = useDispatch();
   const pathname = usePathname();

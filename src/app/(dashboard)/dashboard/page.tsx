@@ -4,13 +4,17 @@ import { notFound } from "next/navigation";
 import { Clock, CheckCircle2, TrendingUp } from "lucide-react";
 import { FolderKanban as FolderKanbanIcon } from "lucide-react";
 import { NewProjectButton } from "@/components/project/NewProjectButton";
+import { getSessionUser, getPrimaryWorkspaceForUser } from "@/lib/auth";
 
 export default async function DashboardPage() {
-  // Hardcode the demo workspace for simplicity
-  const workspaceSlug = "demo-workspace";
+  const user = await getSessionUser();
+  if (!user) notFound();
 
-  const workspace = await prisma.workspace.findUnique({
-    where: { slug: workspaceSlug },
+  const workspace = await getPrimaryWorkspaceForUser(user.id);
+  if (!workspace) notFound();
+
+  const workspaceWithData = await prisma.workspace.findUnique({
+    where: { id: workspace.id },
     include: {
       projects: true,
       tasks: {
@@ -21,7 +25,7 @@ export default async function DashboardPage() {
     },
   });
 
-  if (!workspace) notFound();
+  if (!workspaceWithData) notFound();
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -29,11 +33,11 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Good morning</h1>
           <p className="text-muted-foreground mt-1">
-            Here&apos;s what&apos;s happening in {workspace.name} today.
+            Here&apos;s what&apos;s happening in {workspaceWithData.name} today.
           </p>
         </div>
 
-        <NewProjectButton workspaceId={workspace.id} />
+        <NewProjectButton workspaceId={workspaceWithData.id} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -48,7 +52,7 @@ export default async function DashboardPage() {
             <h3 className="font-medium text-sm">Active Projects</h3>
           </div>
           <p className="text-3xl font-bold relative z-10">
-            {workspace.projects.length}
+            {workspaceWithData.projects.length}
           </p>
         </div>
 
@@ -76,7 +80,7 @@ export default async function DashboardPage() {
             <h3 className="font-medium text-sm">Upcoming Deadlines</h3>
           </div>
           <p className="text-3xl font-bold relative z-10">
-            {workspace.tasks.length}
+            {workspaceWithData.tasks.length}
           </p>
         </div>
       </div>
@@ -93,13 +97,13 @@ export default async function DashboardPage() {
             </button>
           </div>
           <div className="p-0">
-            {workspace.projects.length === 0 ? (
+            {workspaceWithData.projects.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground text-sm">
                 No projects yet.
               </div>
             ) : (
               <div className="divide-y">
-                {workspace.projects.map((project) => (
+                {workspaceWithData.projects.map((project) => (
                   <div
                     key={project.id}
                     className="p-4 hover:bg-muted/30 transition-colors flex items-center justify-between cursor-pointer"
@@ -136,13 +140,13 @@ export default async function DashboardPage() {
             </h2>
           </div>
           <div className="p-0">
-            {workspace.tasks.length === 0 ? (
+            {workspaceWithData.tasks.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground text-sm">
                 No upcoming tasks. You&apos;re all caught up!
               </div>
             ) : (
               <div className="divide-y">
-                {workspace.tasks.map((task) => (
+                {workspaceWithData.tasks.map((task) => (
                   <div
                     key={task.id}
                     className="p-4 hover:bg-muted/30 transition-colors flex items-start gap-3 cursor-pointer"

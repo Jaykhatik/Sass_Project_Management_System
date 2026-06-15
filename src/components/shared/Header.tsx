@@ -1,12 +1,23 @@
-'use client';
+"use client";
 
 import React from 'react';
-import { Search, Bell, Menu } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Search, Bell, Menu, LogOut } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { toggleSidebar } from '@/store/slices/uiSlice';
 
 export function Header() {
   const dispatch = useDispatch();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+    router.push("/login");
+    router.refresh();
+  };
 
   return (
     <header className="h-16 border-b bg-background flex items-center justify-between px-6 sticky top-0 z-10">
@@ -39,11 +50,14 @@ export function Header() {
           <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full border-2 border-background"></span>
         </button>
-        
-        {/* User Avatar Placeholder */}
-        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-medium text-xs cursor-pointer shadow-sm">
-          DU
-        </div>
+
+        <button
+          onClick={handleLogout}
+          className="inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium hover:bg-muted transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          Logout
+        </button>
       </div>
     </header>
   );

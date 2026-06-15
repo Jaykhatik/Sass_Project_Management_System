@@ -2,20 +2,20 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { Sidebar } from '@/components/shared/Sidebar';
 import { Header } from '@/components/shared/Header';
-import prisma from '@/lib/prisma';
+import { getSessionUser, getPrimaryWorkspaceForUser } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Hardcode the demo workspace for simplicity
-  const workspaceSlug = 'demo-workspace';
+  const user = await getSessionUser();
+  if (!user) {
+    redirect('/login');
+  }
 
-  // Verify the workspace exists
-  const workspace = await prisma.workspace.findUnique({
-    where: { slug: workspaceSlug },
-  });
+  const workspace = await getPrimaryWorkspaceForUser(user.id);
 
   if (!workspace) {
     notFound();
