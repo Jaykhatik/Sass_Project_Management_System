@@ -18,14 +18,42 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const [members, setMembers] = useState<any[]>([]);
+
   useEffect(() => {
-    fetch(`/api/tasks/${taskId}?workspaceId=${workspaceId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setTask(data);
-        setLoading(false);
-      });
+    Promise.all([
+      fetch(`/api/tasks/${taskId}?workspaceId=${workspaceId}`).then(res => res.json()),
+      fetch(`/api/workspaces/${workspaceId}/members`).then(res => res.json())
+    ]).then(([taskData, membersData]) => {
+      setTask(taskData);
+      setMembers(membersData);
+      setLoading(false);
+    });
   }, [taskId, workspaceId]);
+
+  const handleAssigneeChange = async (newAssigneeIds: string[]) => {
+    if (!task) return;
+    setSaving(true);
+    try {
+      const updated = await updateTask(taskId, { assigneeIds: newAssigneeIds, workspaceId });
+      setTask(updated);
+      onUpdated(updated);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addAssignee = (userId: string) => {
+    if (!task) return;
+    const currentIds = task.assignees?.map(a => a.user.id) || [];
+    handleAssigneeChange([...currentIds, userId]);
+  };
+
+  const removeAssignee = (userId: string) => {
+    if (!task) return;
+    const currentIds = task.assignees?.map(a => a.user.id) || [];
+    handleAssigneeChange(currentIds.filter(id => id !== userId));
+  };
 
   const handleUpdate = async (field: keyof Task, value: any) => {
     if (!task) return;
@@ -121,7 +149,34 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
                 className="w-full bg-muted/30 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 ring-primary/50"
               />
             </div>
-            {/* More fields like Assignees can go here */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assignees</label>
+              <div className="flex flex-wrap gap-2 items-center">
+                {task.assignees?.map(a => (
+                   <div key={a.user.id} className="flex items-center gap-1.5 bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 px-2.5 py-1 rounded-md text-xs font-bold">
+                     <div className="w-4 h-4 rounded bg-indigo-500 text-white flex items-center justify-center text-[8px] uppercase">
+                        {a.user.name?.charAt(0)}
+                     </div>
+                     {a.user.name}
+                     <button onClick={() => removeAssignee(a.user.id)} className="hover:text-destructive transition-colors ml-1" disabled={saving}>
+                       <X className="w-3 h-3" />
+                     </button>
+                   </div>
+                ))}
+                
+                <select 
+                  className="bg-muted/50 border border-dashed border-muted-foreground/30 text-muted-foreground rounded-md px-2 py-1 text-xs outline-none focus:ring-2 ring-primary/50 font-medium cursor-pointer"
+                  value=""
+                  onChange={(e) => addAssignee(e.target.value)}
+                  disabled={saving}
+                >
+                  <option value="" disabled>+ Add Assignee</option>
+                  {members.filter(m => !task.assignees?.find(a => a.user.id === m.user.id)).map(m => (
+                    <option key={m.user.id} value={m.user.id}>{m.user.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -42,7 +42,7 @@ export async function PATCH(
 
     const { taskId } = await params;
     const body = await request.json();
-    const { workspaceId, title, description, priority, status, dueDate, columnId } = body;
+    const { workspaceId, title, description, priority, status, dueDate, columnId, assigneeIds } = body;
 
     if (!workspaceId) return NextResponse.json({ error: "workspaceId required" }, { status: 400 });
 
@@ -54,6 +54,20 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // If assigneeIds is provided, we delete existing assignees and recreate them
+    let assigneesUpdate = {};
+    if (assigneeIds !== undefined && Array.isArray(assigneeIds)) {
+      assigneesUpdate = {
+        assignees: {
+          deleteMany: {},
+          create: assigneeIds.map((userId: string) => ({
+            userId,
+            assignedBy: user.id
+          }))
+        }
+      };
+    }
+
     const updated = await prisma.task.update({
       where: { id: taskId },
       data: {
@@ -63,6 +77,7 @@ export async function PATCH(
         ...(status !== undefined && { status }),
         ...(columnId !== undefined && { columnId }),
         ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }),
+        ...assigneesUpdate
       },
       include: {
         assignees: { include: { user: { select: { id: true, name: true, avatarUrl: true } } } },

@@ -25,7 +25,7 @@ export const createTask = async (data: {
   return res.json() as Promise<Task>;
 };
 
-export const updateTask = async (taskId: string, data: Partial<Task> & { workspaceId: string }) => {
+export const updateTask = async (taskId: string, data: Partial<Task> & { workspaceId: string; assigneeIds?: string[] }) => {
   const res = await fetch(`${API_BASE}/tasks/${taskId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
