@@ -70,6 +70,7 @@ export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
           </div>
           {/* Close button — mobile only */}
           <button
+            suppressHydrationWarning
             className="md:hidden p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             onClick={close}
             aria-label="Close sidebar"

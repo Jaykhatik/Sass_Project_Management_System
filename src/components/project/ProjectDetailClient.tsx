@@ -7,56 +7,7 @@ import { ListView } from "@/components/project/ListView";
 import { ProjectSettings } from "@/components/project/ProjectSettings";
 import { cn } from "@/lib/utils";
 
-interface Assignee {
-  user: { id: string; name: string | null; avatarUrl: string | null };
-}
-interface Label {
-  label: { id: string; name: string; color: string };
-}
-interface Task {
-  id: string;
-  title: string;
-  priority: string;
-  status: string;
-  dueDate: string | null;
-  assignees: Assignee[];
-  labels: Label[];
-}
-interface Column {
-  id: string;
-  name: string;
-  color: string | null;
-  isDoneCol: boolean | null;
-  taskLimit: number | null;
-  tasks: Task[];
-}
-interface Board {
-  id: string;
-  columns: Column[];
-}
-interface Project {
-  project_id: string;
-  workspaceId: string;
-  projectInfo: {
-    name: string;
-    description: string | null;
-    status: string;
-    color: string | null;
-    icon: string | null;
-    startDate: string | null;
-    dueDate: string | null;
-    createdAt: string;
-    updatedAt: string;
-  };
-  createdBy: {
-    id: string;
-    name: string;
-    email: string;
-    avatarUrl: string | null;
-  };
-  boards: Board[];
-  taskCount: number;
-}
+import { Project } from "@/types";
 
 const TABS = [
   { key: "board", label: "Board", icon: Kanban },
@@ -68,7 +19,7 @@ type Tab = (typeof TABS)[number]["key"];
 
 export function ProjectDetailClient({ project }: { project: Project }) {
   const [activeTab, setActiveTab] = useState<Tab>("board");
-  const defaultBoard = project.boards[0];
+  const defaultBoard = project.boards?.[0];
 
   return (
     <div className="space-y-5">
@@ -117,6 +68,8 @@ export function ProjectDetailClient({ project }: { project: Project }) {
           <BoardView
             columns={defaultBoard.columns}
             workspaceId={project.workspaceId}
+            projectId={project.project_id}
+            boardId={defaultBoard.id}
           />
         )}
         {activeTab === "board" && !defaultBoard && (

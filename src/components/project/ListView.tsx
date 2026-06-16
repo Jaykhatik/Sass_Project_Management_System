@@ -4,29 +4,7 @@ import React from "react";
 import { AlertCircle, ArrowUp, Minus, ArrowDown, Clock, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface Assignee {
-  user: { id: string; name: string | null; avatarUrl: string | null };
-}
-
-interface Label {
-  label: { id: string; name: string; color: string };
-}
-
-interface Task {
-  id: string;
-  title: string;
-  priority: string;
-  status: string;
-  dueDate: string | null;
-  assignees: Assignee[];
-  labels: Label[];
-}
-
-interface Column {
-  id: string;
-  name: string;
-  tasks: Task[];
-}
+import { Column } from "@/types";
 
 interface Props {
   columns: Column[];
@@ -87,7 +65,7 @@ export function ListView({ columns }: Props) {
                 <p className="text-sm font-medium truncate">{task.title}</p>
                 <div className="flex gap-1 mt-0.5 flex-wrap">
                   <span className="text-xs text-muted-foreground">{task.columnName}</span>
-                  {task.labels.map(({ label }) => (
+                  {task.labels?.map(({ label }) => (
                     <span
                       key={label.id}
                       className="text-xs px-1.5 rounded-full"
@@ -124,7 +102,7 @@ export function ListView({ columns }: Props) {
 
               {/* Assignees */}
               <div className="w-28 flex justify-center">
-                {task.assignees.length === 0 ? (
+                {!task.assignees || task.assignees.length === 0 ? (
                   <span className="text-xs text-muted-foreground">—</span>
                 ) : (
                   <div className="flex -space-x-1.5">

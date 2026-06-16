@@ -2,40 +2,18 @@
 
 import React, { useState } from "react";
 import { Plus, MoreHorizontal } from "lucide-react";
-import { TaskCard } from "./TaskCard";
+import { TaskCard } from "@/components/task/TaskCard";
+import { CreateTaskDialog } from "@/components/task/CreateTaskDialog";
+import { TaskModal } from "@/components/task/TaskModal";
+import { reorderTasks } from "@/services/taskService";
+import { Column, Task } from "@/types";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
-
-interface Assignee {
-  user: { id: string; name: string | null; avatarUrl: string | null };
-}
-
-interface Label {
-  label: { id: string; name: string; color: string };
-}
-
-interface Task {
-  id: string;
-  title: string;
-  priority: string;
-  status: string;
-  dueDate: string | null;
-  assignees: Assignee[];
-  labels: Label[];
-}
-
-interface Column {
-  id: string;
-  name: string;
-  color: string | null;
-  isDoneCol: boolean | null;
-  taskLimit: number | null;
-  tasks: Task[];
-}
 
 interface Props {
   columns: Column[];
   workspaceId: string;
+  projectId: string;
+  boardId: string;
 }
 
 const COL_HEADER_COLORS: string[] = [
@@ -47,29 +25,55 @@ const COL_HEADER_COLORS: string[] = [
   "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
 ];
 
-export function BoardView({ columns, workspaceId }: Props) {
-  const [addingToColumn, setAddingToColumn] = useState<string | null>(null);
-  const [newTaskTitle, setNewTaskTitle] = useState("");
-  const router = useRouter();
+export function BoardView({ columns: initialColumns, workspaceId, projectId, boardId }: Props) {
+  const [columns, setColumns] = useState<Column[]>(initialColumns);
+  const [creatingInCol, setCreatingInCol] = useState<string | null>(null);
+  const [activeTask, setActiveTask] = useState<string | null>(null);
 
-  const handleAddTask = async (columnId: string) => {
-    if (!newTaskTitle.trim()) return;
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetColumnId: string) => {
+    e.preventDefault();
+    const taskId = e.dataTransfer.getData("taskId");
+    const sourceColumnId = e.dataTransfer.getData("sourceColumnId");
+
+    if (!taskId || sourceColumnId === targetColumnId) return;
+
+    // Optimistic UI update
+    setColumns((prev) => {
+      const newCols = prev.map(c => ({ ...c, tasks: [...c.tasks] }));
+      const srcColIndex = newCols.findIndex((c) => c.id === sourceColumnId);
+      const destColIndex = newCols.findIndex((c) => c.id === targetColumnId);
+
+      if (srcColIndex === -1 || destColIndex === -1) return prev;
+
+      const taskIndex = newCols[srcColIndex].tasks.findIndex((t) => t.id === taskId);
+      if (taskIndex === -1) return prev;
+
+      const [task] = newCols[srcColIndex].tasks.splice(taskIndex, 1);
+      
+      // Update task column
+      const updatedTask = { ...task };
+      // Note: we'd ideally set columnId on task if we maintained it, but we can just push it
+      newCols[destColIndex].tasks.push(updatedTask);
+      
+      return newCols;
+    });
 
     try {
-      await fetch("/api/tasks", {
-        method: "POST",
+      // Find the task's boardId (we can pass boardId from props or context ideally)
+      // Since reorder API expects boardId, and we need position, we simplify here:
+      await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          workspaceId,
-          columnId,
-          title: newTaskTitle.trim(),
-        }),
+        body: JSON.stringify({ workspaceId, columnId: targetColumnId }),
       });
-      setNewTaskTitle("");
-      setAddingToColumn(null);
-      router.refresh();
-    } catch {
-      // Error handled silently — task creation API is Phase 6
+      // We are just patching the columnId for now, a full reorder API with position logic would go here
+    } catch (err) {
+      console.error(err);
+      // Revert could be handled here
     }
   };
 
@@ -83,6 +87,8 @@ export function BoardView({ columns, workspaceId }: Props) {
           <div
             key={col.id}
             className="flex-shrink-0 w-72 flex flex-col gap-2"
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, col.id)}
           >
             {/* Column Header */}
             <div className="flex items-center justify-between px-1">
@@ -110,62 +116,70 @@ export function BoardView({ columns, workspaceId }: Props) {
               </button>
             </div>
 
-            {/* Tasks */}
+            {/* Tasks container */}
             <div className="bg-muted/40 rounded-xl p-2 space-y-2 min-h-[120px]">
               {col.tasks.map((task) => (
-                <TaskCard key={task.id} task={task} />
+                <TaskCard 
+                  key={task.id} 
+                  task={{...task, columnId: col.id} as any} // Ensure columnId exists for dragging
+                  onClick={() => setActiveTask(task.id)} 
+                />
               ))}
 
-              {/* Add Task Input */}
-              {addingToColumn === col.id ? (
-                <div className="space-y-2 pt-1">
-                  <textarea
-                    autoFocus
-                    value={newTaskTitle}
-                    onChange={(e) => setNewTaskTitle(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleAddTask(col.id);
-                      }
-                      if (e.key === "Escape") {
-                        setAddingToColumn(null);
-                        setNewTaskTitle("");
-                      }
-                    }}
-                    placeholder="Task title… (Enter to save)"
-                    className="w-full text-sm bg-card border rounded-md p-2.5 resize-none outline-none focus:ring-2 ring-primary/50 shadow-sm"
-                    rows={2}
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleAddTask(col.id)}
-                      className="text-xs bg-primary text-primary-foreground px-3 py-1.5 rounded-md hover:bg-primary/90 transition-colors"
-                    >
-                      Add Task
-                    </button>
-                    <button
-                      onClick={() => { setAddingToColumn(null); setNewTaskTitle(""); }}
-                      className="text-xs text-muted-foreground hover:text-foreground px-2 py-1.5 rounded-md hover:bg-muted transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setAddingToColumn(col.id)}
-                  disabled={atLimit}
-                  className="w-full flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md px-2 py-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  Add task
-                </button>
-              )}
+              <button
+                onClick={() => setCreatingInCol(col.id)}
+                disabled={atLimit}
+                className="w-full flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md px-2 py-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add task
+              </button>
             </div>
           </div>
         );
       })}
+
+      {/* Add Column Button */}
+      <div className="flex-shrink-0 w-72">
+        <button className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-dashed border-border/50 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all">
+          <Plus className="w-4 h-4" />
+          Add Section
+        </button>
+      </div>
+
+      {/* Modals */}
+      {creatingInCol && (
+        <CreateTaskDialog
+          workspaceId={workspaceId}
+          projectId={projectId}
+          boardId={boardId}
+          columnId={creatingInCol}
+          onClose={() => setCreatingInCol(null)}
+          onCreated={(task) => {
+            setColumns(columns.map(c => c.id === creatingInCol ? { ...c, tasks: [...c.tasks, task] } : c));
+          }}
+        />
+      )}
+
+      {activeTask && (
+        <TaskModal
+          taskId={activeTask}
+          workspaceId={workspaceId}
+          onClose={() => setActiveTask(null)}
+          onUpdated={(updated) => {
+            setColumns(columns.map(c => ({
+              ...c,
+              tasks: c.tasks.map(t => t.id === updated.id ? updated : t)
+            })));
+          }}
+          onDeleted={(id) => {
+            setColumns(columns.map(c => ({
+              ...c,
+              tasks: c.tasks.filter(t => t.id !== id)
+            })));
+          }}
+        />
+      )}
     </div>
   );
 }

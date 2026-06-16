@@ -40,17 +40,36 @@
 6. The board and list views show tasks from the board columns.
 7. The settings form updates the project and can archive it.
 
+### Standardized Project Data Structure
+All project-related APIs have been refactored to use a clean, nested structure. Flat database fields have been grouped into a `projectInfo` object, and the database `id` is mapped to `project_id`. This standardized response format is globally typed in `src/types/index.ts`.
+
+Example payload:
+```json
+{
+  "project_id": "...",
+  "workspaceId": "...",
+  "projectInfo": {
+    "name": "...",
+    "description": "...",
+    "status": "...",
+    "color": "..."
+  },
+  "createdBy": { ... },
+  "taskCount": 0
+}
+```
+
 ## API Table
 
 ### Projects
 
 | Method | Route | What it does | Request body | Returns |
 |---|---|---|---|---|
-| `GET` | `/api/projects?workspaceId=[id]` | List projects in a workspace | Query: `workspaceId` | Project list |
-| `POST` | `/api/projects` | Create a project | Project fields | New project |
-| `GET` | `/api/projects/[projectId]?workspaceId=[id]` | Load one project | Query: `workspaceId` | Project details |
-| `PATCH` | `/api/projects/[projectId]` | Update project | Project fields + `workspaceId` | Updated project |
-| `DELETE` | `/api/projects/[projectId]?workspaceId=[id]` | Archive a project | Query: `workspaceId` | Archived project |
+| `GET` | `/api/projects?workspaceId=[id]` | List projects in a workspace | Query: `workspaceId` | `{ projects: Project[], totalCount: number }` |
+| `POST` | `/api/projects` | Create a project | Project fields | New structured `Project` |
+| `GET` | `/api/projects/[projectId]?workspaceId=[id]` | Load one project | Query: `workspaceId` | Structured `Project` details |
+| `PATCH` | `/api/projects/[projectId]` | Update project | Project fields + `workspaceId` | Updated `Project` |
+| `DELETE` | `/api/projects/[projectId]?workspaceId=[id]` | Archive a project | Query: `workspaceId` | Archived `Project` |
 
 ### Boards and Columns
 
