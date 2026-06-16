@@ -32,10 +32,13 @@ export async function middleware(request: NextRequest) {
 
   // 2. CSRF Protection for API Mutations
   const method = request.method;
-  if (pathname.startsWith("/api/") && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+  if (
+    pathname.startsWith("/api/") &&
+    ["POST", "PUT", "PATCH", "DELETE"].includes(method)
+  ) {
     const origin = request.headers.get("origin");
     const host = request.headers.get("host");
-    
+
     if (origin) {
       const originUrl = new URL(origin);
       // We check if the request origin matches our own host to prevent cross-site request forgery
@@ -47,7 +50,8 @@ export async function middleware(request: NextRequest) {
 
   // 3. Route Protection
   const access = request.cookies.get(ACCESS_COOKIE)?.value;
-  const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/signup");
+  const isAuthPage =
+    pathname.startsWith("/login") || pathname.startsWith("/signup");
   const isDashboard = pathname.startsWith("/dashboard");
 
   let isValidSession = false;

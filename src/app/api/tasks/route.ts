@@ -78,3 +78,76 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function GET(request: Request) {
+  try {
+    const user = await getSessionUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const workspaceId = searchParams.get("workspaceId");
+    const projectId = searchParams.get("projectId");
+    const assigneeId = searchParams.get("assigneeId");
+
+    if (!workspaceId) {
+      return NextResponse.json({ error: "workspaceId is required" }, { status: 400 });
+    }
+
+    // Security check: ensure user is part of the workspace
+    const membership = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId,
+          userId: user.id,
+        },
+      },
+    });
+
+    if (!membership && workspaceId !== (await prisma.workspace.findUnique({ where: { id: workspaceId } }))?.ownerId) {
+       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Build the query dynamically
+    const whereClause: any = { workspaceId };
+    
+    if (projectId) {
+      whereClause.projectId = projectId;
+    }
+
+    if (assigneeId) {
+      whereClause.assignees = {
+        some: { userId: assigneeId }
+      };
+    }
+
+    // Fetch tasks
+    const tasks = await prisma.task.findMany({
+      where: whereClause,
+      include: {
+        assignees: {
+          include: {
+            user: { select: { id: true, name: true, avatarUrl: true } }
+          }
+        },
+        labels: {
+          include: { label: true }
+        },
+        project: {
+          select: { id: true, name: true }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    return NextResponse.json(tasks, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch tasks" },
+      { status: 500 }
+    );
+  }
+}
+

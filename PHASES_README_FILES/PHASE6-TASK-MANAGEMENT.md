@@ -36,6 +36,7 @@
 | Method | Route | What it does | Request body | Returns |
 |---|---|---|---|---|
 | `POST` | `/api/tasks` | Create a task | `{ workspaceId, columnId, title, ... }` | New Task |
+| `GET` | `/api/tasks?workspaceId=[id]` | Load all tasks | Query: `workspaceId`, `projectId`, `assigneeId` | Array of Tasks |
 | `GET` | `/api/tasks/[taskId]?workspaceId=[id]` | Load one task | Query: `workspaceId` | Task details + assignees |
 | `PATCH` | `/api/tasks/[taskId]` | Update a task | `{ workspaceId, title, priority, ... }` | Updated Task |
 | `DELETE` | `/api/tasks/[taskId]?workspaceId=[id]` | Delete a task | Query: `workspaceId` | `{ success: true }` |
@@ -111,12 +112,18 @@ Because the app is secured with `HttpOnly` cookies, you must authenticate your P
   ```
 - **Result:** You will get a `201 Created` response. Copy the new task `id`.
 
-### Step 3: Test Fetching Task (GET)
+### Step 3: Test Fetching a Single Task (GET)
 - **URL:** `http://localhost:3000/api/tasks/YOUR_TASK_ID?workspaceId=YOUR_WORKSPACE_ID`
 - **Method:** `GET`
 - **Result:** You will get the task details along with assignees and labels.
 
-### Step 4: Test Updating Task (PATCH)
+### Step 4: Test Fetching All Tasks (GET)
+- **URL:** `http://localhost:3000/api/tasks?workspaceId=YOUR_WORKSPACE_ID`
+- **Method:** `GET`
+- **Optional Queries:** You can append `&projectId=ID` or `&assigneeId=ID` to filter the results!
+- **Result:** You will receive a JSON array containing all matching tasks across the workspace.
+
+### Step 5: Test Updating Task (PATCH)
 - **URL:** `http://localhost:3000/api/tasks/YOUR_TASK_ID`
 - **Method:** `PATCH`
 - **Body (JSON):**
@@ -129,7 +136,7 @@ Because the app is secured with `HttpOnly` cookies, you must authenticate your P
   ```
 - **Result:** The task will be updated in the database.
 
-### Step 5: Test Drag & Drop Reordering (PATCH)
+### Step 6: Test Drag & Drop Reordering (PATCH)
 - **URL:** `http://localhost:3000/api/boards/YOUR_BOARD_ID/tasks/reorder`
 - **Method:** `PATCH`
 - **Body (JSON):**
@@ -147,7 +154,7 @@ Because the app is secured with `HttpOnly` cookies, you must authenticate your P
   ```
 - **Result:** Task column and position are updated (`{ "success": true }`).
 
-### Step 6: Test Deletion (DELETE)
+### Step 7: Test Deletion (DELETE)
 - **URL:** `http://localhost:3000/api/tasks/YOUR_TASK_ID?workspaceId=YOUR_WORKSPACE_ID`
 - **Method:** `DELETE`
 - **Result:** Task is permanently deleted (`{ "success": true }`).

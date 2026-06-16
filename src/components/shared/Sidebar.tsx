@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
+import axios from "axios";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -33,6 +34,21 @@ export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
   const pathname = usePathname();
 
   const close = () => dispatch(setSidebarOpen(false));
+
+  // Option B: Silent Token Refresh Polling
+  // Pings the backend every 12 minutes to keep the 15-minute access token alive
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        await axios.post("/api/auth/refresh", {}, { withCredentials: true });
+        console.log("Session silently refreshed.");
+      } catch (error) {
+        console.error("Failed to refresh session.");
+      }
+    }, 12 * 60 * 1000); // 12 minutes
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -121,7 +137,7 @@ export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
             <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">
               Unlock unlimited projects, advanced analytics, and priority support.
             </p>
-            <button className="w-full text-xs bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-95 transition-all shadow-sm">
+            <button suppressHydrationWarning className="w-full text-xs bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-95 transition-all shadow-sm">
               Upgrade Plan ✨
             </button>
           </div>
