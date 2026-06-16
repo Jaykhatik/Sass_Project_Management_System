@@ -10,6 +10,7 @@
 - Supports adding custom labels (e.g., "Bug", "Feature") to tasks.
 - Implements drag-and-drop functionality to move tasks between columns.
 - Implements deletion of tasks.
+- **Provides a global "My Tasks" page to view, search, and filter all tasks across the workspace.**
 
 ## Files Involved (To Be Created/Updated)
 
@@ -22,6 +23,8 @@
 | `src/components/task/TaskCard.tsx` | UI for the draggable task card on the board |
 | `src/components/task/TaskModal.tsx` | The glassmorphism modal for editing task details |
 | `src/components/task/CreateTaskDialog.tsx` | Dialog for quickly adding a new task |
+| `src/app/(dashboard)/dashboard/tasks/page.tsx` | The server page for the global My Tasks view |
+| `src/app/(dashboard)/dashboard/tasks/MyTasksClient.tsx` | The client component handling filtering and rendering the task list |
 
 ## How It Works
 
@@ -30,6 +33,7 @@
 3. **Updating:** Edits in the modal (like changing priority) trigger `PATCH /api/tasks/[taskId]`.
 4. **Moving:** Dragging a task to a new column triggers `PATCH /api/boards/[boardId]/tasks/reorder`, updating the database so the new position is saved for everyone.
 5. **Assignees:** Linking a user to a task creates a record in the `TaskAssignee` Prisma table.
+6. **Global Viewing:** The `/dashboard/tasks` page aggregates tasks from all projects by calling `GET /api/tasks`, allowing filtering by status, priority, and text search.
 
 ## API Table
 
@@ -56,6 +60,7 @@
 - Users can assign themselves or others to a task.
 - Tasks can be dragged across columns and the state is successfully saved to the database.
 - Tasks can be deleted.
+- The global "My Tasks" page successfully filters tasks and integrates with the Task Modal.
 
 ## How to Test Phase 6 (Frontend)
 
@@ -85,6 +90,13 @@
 **Step 5: Test Deletion**
 1. While inside the Task Modal, click the **"Delete"** button in the top right corner.
 2. Accept the confirmation prompt. The task will be permanently deleted from the board and the database.
+
+**Step 6: Test the Global "My Tasks" Page**
+1. Click **"My Tasks"** in your Sidebar (`/dashboard/tasks`).
+2. You will see a list of tasks. Use the toggle at the top left to switch between **"All Tasks"** and **"My Tasks"**.
+3. Use the Search bar to find a specific task by its title.
+4. Try filtering the list by Status (e.g., "To Do") or Priority (e.g., "High").
+5. Click on any task in the list to open its Task Modal and edit it seamlessly!
 
 ## How to Test Phase 6 (Backend via Postman)
 
