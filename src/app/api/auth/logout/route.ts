@@ -1,35 +1,28 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { authCookieNames } from "@/lib/auth";
+import { logoutFromCurrentDevice, logoutFromAllDevices, authCookieNames } from "@/lib/auth";
+import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
-  const cookieHeader = request.headers.get("cookie") || "";
-  const accessToken = cookieHeader.match(new RegExp(`${authCookieNames.access}=([^;]+)`))?.[1];
-  const refreshToken = cookieHeader.match(new RegExp(`${authCookieNames.refresh}=([^;]+)`))?.[1];
+  try {
+    const cookieStore = await cookies();
+    const refreshToken = cookieStore.get(authCookieNames.refresh)?.value;
 
-  if (accessToken) {
-    await prisma.$executeRaw`DELETE FROM "Session" WHERE "accessToken" = ${accessToken}`.catch(() => {});
+    if (!refreshToken) {
+      return NextResponse.json(
+        { error: "You are already logged out", code: "NOT_LOGGED_IN" },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
+    if (body.allDevices) {
+      await logoutFromAllDevices();
+    } else {
+      await logoutFromCurrentDevice();
+    }
+
+    return NextResponse.json({ success: true, message: "Logged out successfully" });
+  } catch (error) {
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-
-  if (refreshToken) {
-    await prisma.$executeRaw`DELETE FROM "Session" WHERE "refreshToken" = ${refreshToken}`.catch(() => {});
-  }
-
-  const response = NextResponse.json({ success: true });
-  response.cookies.set(authCookieNames.access, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    expires: new Date(0),
-    path: "/",
-  });
-  response.cookies.set(authCookieNames.refresh, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    expires: new Date(0),
-    path: "/",
-  });
-
-  return response;
 }

@@ -9,7 +9,8 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextUrl = searchParams.get("next") || "/dashboard";
-  const [email, setEmail] = useState("");
+  const emailParam = searchParams.get("email") || "";
+  const [email, setEmail] = useState(emailParam);
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -95,7 +96,12 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none ring-0 transition focus:border-indigo-400 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                  readOnly={!!emailParam}
+                  className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none ring-0 transition ${
+                    emailParam
+                      ? "border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed"
+                      : "border-slate-200 bg-white focus:border-indigo-400 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                  }`}
                   placeholder="you@example.com"
                 />
               </label>

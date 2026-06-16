@@ -1,18 +1,40 @@
 import { MemberList } from './MemberList';
-import { getAllMembers } from '@/services/workspaceService';
 import { getPrimaryWorkspaceForUser, getSessionUser } from '@/lib/auth';
 import { notFound } from 'next/navigation';
+import { cookies } from 'next/headers';
 
 export const metadata = {
   title: 'Members | SaaS Project Management',
 };
+
+async function getMembers(workspaceId: string) {
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore
+    .getAll()
+    .map(({ name, value }) => `${name}=${value}`)
+    .join('; ');
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/workspaces/${workspaceId}/members`,
+    {
+      cache: 'no-store',
+      headers: cookieHeader ? { Cookie: cookieHeader } : {},
+    }
+  );
+
+  if (!res.ok) throw new Error('Failed to fetch members');
+  return res.json();
+}
 
 export default async function MembersPage() {
   const user = await getSessionUser();
   if (!user) notFound();
   const workspace = await getPrimaryWorkspaceForUser(user.id);
   if (!workspace) notFound();
-  const members = await getAllMembers(workspace.id);
+  
+  const membersData = await getMembers(workspace.id);
+  // The API returns { members: [...] } so we extract the array
+  const members = membersData.members || membersData;
   
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">

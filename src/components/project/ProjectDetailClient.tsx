@@ -35,13 +35,27 @@ interface Board {
   columns: Column[];
 }
 interface Project {
-  id: string;
-  name: string;
-  description: string | null;
-  color: string | null;
-  status: string;
+  project_id: string;
   workspaceId: string;
+  projectInfo: {
+    name: string;
+    description: string | null;
+    status: string;
+    color: string | null;
+    icon: string | null;
+    startDate: string | null;
+    dueDate: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+  createdBy: {
+    id: string;
+    name: string;
+    email: string;
+    avatarUrl: string | null;
+  };
   boards: Board[];
+  taskCount: number;
 }
 
 const TABS = [
@@ -62,14 +76,14 @@ export function ProjectDetailClient({ project }: { project: Project }) {
       <div className="flex items-center gap-4">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0"
-          style={{ backgroundColor: project.color ?? "#6366F1" }}
+          style={{ backgroundColor: project.projectInfo.color ?? "#6366F1" }}
         >
-          {project.name.charAt(0).toUpperCase()}
+          {project.projectInfo.name.charAt(0).toUpperCase()}
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tight">{project.name}</h1>
-          {project.description && (
-            <p className="text-sm text-muted-foreground mt-0.5">{project.description}</p>
+          <h1 className="text-xl font-bold tracking-tight">{project.projectInfo.name}</h1>
+          {project.projectInfo.description && (
+            <p className="text-sm text-muted-foreground mt-0.5">{project.projectInfo.description}</p>
           )}
         </div>
       </div>

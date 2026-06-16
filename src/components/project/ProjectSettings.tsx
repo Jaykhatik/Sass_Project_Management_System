@@ -5,12 +5,19 @@ import { useRouter } from "next/navigation";
 import { Save, Loader2, Archive } from "lucide-react";
 
 interface Project {
-  id: string;
-  name: string;
-  description: string | null;
-  color: string | null;
-  status: string;
+  project_id: string;
   workspaceId: string;
+  projectInfo: {
+    name: string;
+    description: string | null;
+    status: string;
+    color: string | null;
+    icon: string | null;
+    startDate: string | null;
+    dueDate: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
 }
 
 const COLORS = [
@@ -20,9 +27,9 @@ const COLORS = [
 ];
 
 export function ProjectSettings({ project }: { project: Project }) {
-  const [name, setName] = useState(project.name);
-  const [description, setDescription] = useState(project.description ?? "");
-  const [color, setColor] = useState(project.color ?? "#6366F1");
+  const [name, setName] = useState(project.projectInfo.name);
+  const [description, setDescription] = useState(project.projectInfo.description ?? "");
+  const [color, setColor] = useState(project.projectInfo.color ?? "#6366F1");
   const [loading, setLoading] = useState(false);
   const [archiving, setArchiving] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +44,7 @@ export function ProjectSettings({ project }: { project: Project }) {
     setSuccess("");
 
     try {
-      const res = await fetch(`/api/projects/${project.id}`, {
+      const res = await fetch(`/api/projects/${project.project_id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -66,7 +73,7 @@ export function ProjectSettings({ project }: { project: Project }) {
     if (!confirm("Archive this project? It will be hidden from the main list.")) return;
     setArchiving(true);
     try {
-      await fetch(`/api/projects/${project.id}?workspaceId=${project.workspaceId}`, {
+      await fetch(`/api/projects/${project.project_id}?workspaceId=${project.workspaceId}`, {
         method: "DELETE",
       });
       router.push("/dashboard/projects");

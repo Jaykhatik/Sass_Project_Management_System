@@ -11,15 +11,27 @@ interface Board {
 }
 
 interface Project {
-  id: string;
-  name: string;
-  description: string | null;
-  status: string;
-  color: string | null;
-  createdAt: string;
-  dueDate: string | null;
-  boards: Board[];
-  _count: { tasks: number };
+  project_id: string;
+  workspaceId: string;
+  projectInfo: {
+    name: string;
+    description: string | null;
+    status: string;
+    color: string | null;
+    icon: string | null;
+    startDate: string | null;
+    dueDate: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+  createdBy: {
+    id: string;
+    name: string;
+    email: string;
+    avatarUrl: string | null;
+  };
+  defaultBoardId: string | null;
+  taskCount: number;
 }
 
 interface Props {
@@ -78,14 +90,14 @@ export function ProjectsClient({ projects, workspaceId }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {projects.map((project) => (
             <div
-              key={project.id}
-              onClick={() => router.push(`/dashboard/projects/${project.id}`)}
+              key={project.project_id}
+              onClick={() => router.push(`/dashboard/projects/${project.project_id}`)}
               className="group border rounded-xl bg-card shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden hover:-translate-y-0.5"
             >
               {/* Color bar */}
               <div
                 className="h-1.5 w-full"
-                style={{ backgroundColor: project.color ?? "#6366F1" }}
+                style={{ backgroundColor: project.projectInfo.color ?? "#6366F1" }}
               />
 
               <div className="p-5 space-y-4">
@@ -94,25 +106,25 @@ export function ProjectsClient({ projects, workspaceId }: Props) {
                   <div className="flex items-center gap-3">
                     <div
                       className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm font-bold shrink-0"
-                      style={{ backgroundColor: project.color ?? "#6366F1" }}
+                      style={{ backgroundColor: project.projectInfo.color ?? "#6366F1" }}
                     >
-                      {project.name.charAt(0).toUpperCase()}
+                      {project.projectInfo.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <h3 className="font-semibold text-sm group-hover:text-primary transition-colors line-clamp-1">
-                        {project.name}
+                        {project.projectInfo.name}
                       </h3>
-                      {project.description && (
+                      {project.projectInfo.description && (
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                          {project.description}
+                          {project.projectInfo.description}
                         </p>
                       )}
                     </div>
                   </div>
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full border capitalize shrink-0 ${STATUS_STYLES[project.status] ?? STATUS_STYLES.active}`}
+                    className={`text-xs px-2 py-0.5 rounded-full border capitalize shrink-0 ${STATUS_STYLES[project.projectInfo.status] ?? STATUS_STYLES.active}`}
                   >
-                    {project.status}
+                    {project.projectInfo.status}
                   </span>
                 </div>
 
@@ -120,12 +132,12 @@ export function ProjectsClient({ projects, workspaceId }: Props) {
                 <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1 border-t">
                   <div className="flex items-center gap-1.5">
                     <AlignLeft className="w-3.5 h-3.5" />
-                    <span>{project._count.tasks} task{project._count.tasks !== 1 ? "s" : ""}</span>
+                    <span>{project.taskCount} task{project.taskCount !== 1 ? "s" : ""}</span>
                   </div>
-                  {project.dueDate && (
+                  {project.projectInfo.dueDate && (
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5" />
-                      <span>Due {new Date(project.dueDate).toLocaleDateString()}</span>
+                      <span>Due {new Date(project.projectInfo.dueDate).toLocaleDateString()}</span>
                     </div>
                   )}
                 </div>

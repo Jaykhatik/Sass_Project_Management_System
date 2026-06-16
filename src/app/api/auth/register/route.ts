@@ -3,13 +3,6 @@ import prisma from "@/lib/prisma";
 import { hashPassword, createSession, setSessionCookies } from "@/lib/auth";
 import { BadRequestError, AppError } from "@/lib/errors";
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
 
 export async function POST(request: Request) {
   try {
@@ -33,41 +26,29 @@ export async function POST(request: Request) {
       throw new BadRequestError("An account already exists for this email");
     }
 
+    const hashedPassword = await hashPassword(password);
     const user = await prisma.user.create({
       data: {
         name,
         email,
-        passwordHash: hashPassword(password),
-        emailVerified: true,
+        passwordHash: hashedPassword,
+        emailVerified: false,
       },
     });
-
-    const baseSlug = slugify(name) || "workspace";
-    const slug = `${baseSlug}-${user.id.slice(0, 6)}`;
-
-    const workspace = await prisma.workspace.create({
-      data: {
-        name: `${name}'s Workspace`,
-        slug,
-        ownerId: user.id,
-        members: {
-          create: [{ userId: user.id, role: "owner" }],
-        },
-      },
-    });
-
-    const session = await createSession(user.id);
-    await setSessionCookies(
-      session.accessToken,
-      session.refreshToken,
-      session.accessTokenExpiresAt,
-      session.refreshTokenExpiresAt,
-    );
 
     return NextResponse.json(
       {
-        user: { id: user.id, name: user.name, email: user.email },
-        workspace: { id: workspace.id, slug: workspace.slug },
+        message: "Registration successful. Please login to verify your email and create your workspace.",
+        redirectTo: `/login?email=${encodeURIComponent(user.email)}`,
+        authenticated: false,
+        user: { 
+          id: user.id, 
+          name: user.name, 
+          email: user.email,
+          avatarUrl: user.avatarUrl,
+          emailVerified: user.emailVerified,
+          createdAt: user.createdAt
+        },
       },
       { status: 201 },
     );

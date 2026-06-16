@@ -22,6 +22,9 @@ export async function GET(
     const project = await prisma.project.findFirst({
       where: { id: projectId, workspaceId },
       include: {
+        createdBy: {
+          select: { id: true, name: true, email: true, avatarUrl: true },
+        },
         boards: {
           where: { isDefault: true },
           include: {
@@ -45,7 +48,27 @@ export async function GET(
     if (!project) {
       return NextResponse.json({ error: "Project not found", code: "NOT_FOUND" }, { status: 404 });
     }
-    return NextResponse.json(project);
+
+    const responsePayload = {
+      project_id: project.id,
+      workspaceId: project.workspaceId,
+      projectInfo: {
+        name: project.name,
+        description: project.description,
+        status: project.status,
+        color: project.color,
+        icon: project.icon,
+        startDate: project.startDate,
+        dueDate: project.dueDate,
+        createdAt: project.createdAt,
+        updatedAt: project.updatedAt,
+      },
+      createdBy: project.createdBy,
+      boards: project.boards,
+      taskCount: project._count?.tasks || 0,
+    };
+
+    return NextResponse.json(responsePayload);
   } catch (error: unknown) {
     if (error instanceof AppError) {
       return NextResponse.json(

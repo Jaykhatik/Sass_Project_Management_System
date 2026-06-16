@@ -25,8 +25,8 @@ export default function SignupPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Unable to create account");
-      router.push("/dashboard");
-      router.refresh();
+      router.push(data.redirectTo || `/login?email=${encodeURIComponent(email)}`);
+      // Removed router.refresh() because login needs no refresh if it's just client navigation.
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to create account");
     } finally {
