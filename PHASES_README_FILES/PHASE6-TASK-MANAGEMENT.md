@@ -38,7 +38,7 @@
 | `POST` | `/api/tasks` | Create a task | `{ workspaceId, columnId, title, ... }` | New Task |
 | `GET` | `/api/tasks?workspaceId=[id]` | Load all tasks | Query: `workspaceId`, `projectId`, `assigneeId` | Array of Tasks |
 | `GET` | `/api/tasks/[taskId]?workspaceId=[id]` | Load one task | Query: `workspaceId` | Task details + assignees |
-| `PATCH` | `/api/tasks/[taskId]` | Update a task | `{ workspaceId, title, priority, ... }` | Updated Task |
+| `PATCH` | `/api/tasks/[taskId]` | Update a task | `{ workspaceId, title, priority, assigneeIds... }` | Updated Task |
 | `DELETE` | `/api/tasks/[taskId]?workspaceId=[id]` | Delete a task | Query: `workspaceId` | `{ success: true }` |
 | `PATCH` | `/api/boards/[boardId]/tasks/reorder` | Drag-and-drop | `{ workspaceId, tasks: [{ id, columnId, position }] }`| `{ success: true }` |
 
@@ -75,12 +75,12 @@
 2. Release the mouse button. The card will snap into the new column.
 3. *Behind the scenes, the frontend fires a `PATCH` request to save this new location in the database.*
 
-**Step 4: Test the Task Modal (Editing)**
+**Step 4: Test the Task Modal (Editing & Assigning)**
 1. Click on the task card you just moved.
 2. The **Task Modal** will slide into view.
 3. Click the title at the top to change it, or add a detailed description in the text box.
-4. Try changing the priority dropdown or picking a due date.
-5. *Because of the auto-save architecture, every time you click away from an input, it automatically saves to the database.*
+4. Try assigning yourself to the task using the new **Assignees dropdown**.
+5. *Because of the auto-save architecture, every time you click away from an input or select an assignee, it automatically saves to the database.*
 
 **Step 5: Test Deletion**
 1. While inside the Task Modal, click the **"Delete"** button in the top right corner.
@@ -131,7 +131,8 @@ Because the app is secured with `HttpOnly` cookies, you must authenticate your P
   {
     "workspaceId": "YOUR_WORKSPACE_ID",
     "title": "Updated from Postman!",
-    "description": "This description was added via API"
+    "description": "This description was added via API",
+    "assigneeIds": ["YOUR_USER_ID"]
   }
   ```
 - **Result:** The task will be updated in the database.
