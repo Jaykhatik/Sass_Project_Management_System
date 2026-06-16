@@ -55,7 +55,7 @@ export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
       {/* ── Mobile Overlay — fades in/out smoothly ── */}
       <div
         className={cn(
-          "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-all duration-300 md:hidden",
+          "fixed inset-0 z-40 bg-background/60 backdrop-blur-md transition-all duration-300 lg:hidden",
           isSidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
         onClick={close}
@@ -65,12 +65,12 @@ export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
       {/* ── Sidebar Panel — slides in/out ── */}
       <aside
         className={cn(
-          "fixed md:sticky top-0 left-0 z-50 h-screen w-72 md:w-64",
-          "flex flex-col border-r bg-card",
+          "fixed lg:sticky top-0 left-0 z-50 h-screen w-72 lg:w-64",
+          "flex flex-col border-r bg-background/95 lg:bg-card backdrop-blur-2xl",
           "transition-[transform,box-shadow] duration-300 ease-in-out",
           isSidebarOpen
-            ? "translate-x-0 shadow-2xl shadow-black/30 md:shadow-none"
-            : "-translate-x-full md:translate-x-0"
+            ? "translate-x-0 shadow-[4px_0_24px_rgba(0,0,0,0.1)] border-r-white/10 lg:shadow-none"
+            : "-translate-x-full lg:translate-x-0"
         )}
       >
         {/* ── Logo / Workspace Header ── */}
@@ -87,7 +87,7 @@ export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
           {/* Close button — mobile only */}
           <button
             suppressHydrationWarning
-            className="md:hidden p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="lg:hidden p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             onClick={close}
             aria-label="Close sidebar"
           >
@@ -97,9 +97,6 @@ export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
 
         {/* ── Nav Links ── */}
         <nav className="flex-1 py-5 px-3 space-y-0.5 overflow-y-auto">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3 px-2">
-            Navigation
-          </p>
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive =
@@ -139,25 +136,6 @@ export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
             </p>
             <button suppressHydrationWarning className="w-full text-xs bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-95 transition-all shadow-sm">
               Upgrade Plan ✨
-            </button>
-          </div>
-
-          {/* User + Logout card */}
-          <div className="rounded-xl border bg-muted/40 overflow-hidden">
-
-
-            {/* Logout button */}
-            <button
-              onClick={() => {
-                // Will wire up to real auth signOut() in Phase 14
-                console.log("Logout clicked");
-              }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200 group"
-            >
-              <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center group-hover:bg-destructive/15 transition-colors">
-                <LogOut className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform duration-200" />
-              </div>
-              <span>Log out</span>
             </button>
           </div>
         </div>
