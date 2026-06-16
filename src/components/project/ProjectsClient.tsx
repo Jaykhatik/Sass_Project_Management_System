@@ -56,7 +56,8 @@ export function ProjectsClient({ projects, workspaceId }: Props) {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {projects.length} project{projects.length !== 1 ? "s" : ""} in this workspace
+            {projects.length} project{projects.length !== 1 ? "s" : ""} in this
+            workspace
           </p>
         </div>
         <button
@@ -76,7 +77,9 @@ export function ProjectsClient({ projects, workspaceId }: Props) {
           </div>
           <div>
             <p className="font-medium text-foreground">No projects yet</p>
-            <p className="text-sm mt-1">Create your first project to get started.</p>
+            <p className="text-sm mt-1">
+              Create your first project to get started.
+            </p>
           </div>
           <button
             onClick={() => setShowDialog(true)}
@@ -91,13 +94,17 @@ export function ProjectsClient({ projects, workspaceId }: Props) {
           {projects.map((project) => (
             <div
               key={project.project_id}
-              onClick={() => router.push(`/dashboard/projects/${project.project_id}`)}
+              onClick={() =>
+                router.push(`/dashboard/projects/${project.project_id}`)
+              }
               className="group border rounded-xl bg-card shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden hover:-translate-y-0.5"
             >
               {/* Color bar */}
               <div
                 className="h-1.5 w-full"
-                style={{ backgroundColor: project.projectInfo.color ?? "#6366F1" }}
+                style={{
+                  backgroundColor: project.projectInfo.color ?? "#6366F1",
+                }}
               />
 
               <div className="p-5 space-y-4">
@@ -106,7 +113,9 @@ export function ProjectsClient({ projects, workspaceId }: Props) {
                   <div className="flex items-center gap-3">
                     <div
                       className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm font-bold shrink-0"
-                      style={{ backgroundColor: project.projectInfo.color ?? "#6366F1" }}
+                      style={{
+                        backgroundColor: project.projectInfo.color ?? "#6366F1",
+                      }}
                     >
                       {project.projectInfo.name.charAt(0).toUpperCase()}
                     </div>
@@ -132,12 +141,20 @@ export function ProjectsClient({ projects, workspaceId }: Props) {
                 <div className="flex items-center gap-4 text-xs text-muted-foreground pt-1 border-t">
                   <div className="flex items-center gap-1.5">
                     <AlignLeft className="w-3.5 h-3.5" />
-                    <span>{project.taskCount} task{project.taskCount !== 1 ? "s" : ""}</span>
+                    <span>
+                      {project.taskCount} task
+                      {project.taskCount !== 1 ? "s" : ""}
+                    </span>
                   </div>
                   {project.projectInfo.dueDate && (
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5" />
-                      <span>Due {new Date(project.projectInfo.dueDate).toLocaleDateString()}</span>
+                      <span>
+                        Due{" "}
+                        {new Date(
+                          project.projectInfo.dueDate,
+                        ).toLocaleDateString()}
+                      </span>
                     </div>
                   )}
                 </div>

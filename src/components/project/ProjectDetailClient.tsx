@@ -64,7 +64,7 @@ const TABS = [
   { key: "settings", label: "Settings", icon: Settings },
 ] as const;
 
-type Tab = typeof TABS[number]["key"];
+type Tab = (typeof TABS)[number]["key"];
 
 export function ProjectDetailClient({ project }: { project: Project }) {
   const [activeTab, setActiveTab] = useState<Tab>("board");
@@ -81,9 +81,13 @@ export function ProjectDetailClient({ project }: { project: Project }) {
           {project.projectInfo.name.charAt(0).toUpperCase()}
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tight">{project.projectInfo.name}</h1>
+          <h1 className="text-xl font-bold tracking-tight">
+            {project.projectInfo.name}
+          </h1>
           {project.projectInfo.description && (
-            <p className="text-sm text-muted-foreground mt-0.5">{project.projectInfo.description}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {project.projectInfo.description}
+            </p>
           )}
         </div>
       </div>
@@ -98,7 +102,7 @@ export function ProjectDetailClient({ project }: { project: Project }) {
               "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px",
               activeTab === key
                 ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"
+                : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted",
             )}
           >
             <Icon className="w-4 h-4" />
@@ -123,9 +127,7 @@ export function ProjectDetailClient({ project }: { project: Project }) {
         {activeTab === "list" && defaultBoard && (
           <ListView columns={defaultBoard.columns} />
         )}
-        {activeTab === "settings" && (
-          <ProjectSettings project={project} />
-        )}
+        {activeTab === "settings" && <ProjectSettings project={project} />}
       </div>
     </div>
   );

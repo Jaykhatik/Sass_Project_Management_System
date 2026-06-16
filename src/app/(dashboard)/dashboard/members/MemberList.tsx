@@ -58,7 +58,7 @@ export function MemberList({
     <div className="divide-y divide-border">
       {members.map((member) => (
         <div
-          key={member.id}
+          key={member.membership_id}
           className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
         >
           <div className="flex items-center gap-4">

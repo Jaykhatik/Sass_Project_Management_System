@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import { UnauthorizedError } from "@/lib/errors";
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "super-secret-jwt-key-for-dev-1234567890123456");
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET as string);
 const ACCESS_COOKIE = "access_token";
 const REFRESH_COOKIE = "refresh_token";
 const ACCESS_TTL_SEC = 15 * 60; // 15 minutes

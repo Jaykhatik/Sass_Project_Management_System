@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 const ACCESS_COOKIE = "access_token";
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "super-secret-jwt-key-for-dev-1234567890123456");
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET as string);
 
 // In-memory rate limiting (works per edge-instance, so not perfect but good enough for simple requirements without Redis)
 const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
@@ -14,7 +14,7 @@ export async function middleware(request: NextRequest) {
 
   // 1. Rate Limiting for API routes
   if (pathname.startsWith("/api/")) {
-    const ip = request.ip || request.headers.get("x-forwarded-for") || "127.0.0.1";
+    const ip = request.headers.get("x-forwarded-for") || "127.0.0.1";
     const now = Date.now();
     const rateLimitData = rateLimitMap.get(ip) || { count: 0, lastReset: now };
 
