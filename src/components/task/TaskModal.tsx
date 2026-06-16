@@ -23,16 +23,24 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  
+  const [newSubTaskTitle, setNewSubTaskTitle] = useState("");
 
   const [members, setMembers] = useState<any[]>([]);
+  const [workspaceLabels, setWorkspaceLabels] = useState<any[]>([]);
+  const [workspaceTasks, setWorkspaceTasks] = useState<Task[]>([]);
 
   useEffect(() => {
     Promise.all([
       fetch(`/api/tasks/${taskId}?workspaceId=${workspaceId}`).then(res => res.json()),
-      fetch(`/api/workspaces/${workspaceId}/members`).then(res => res.json())
-    ]).then(([taskData, membersData]) => {
+      fetch(`/api/workspaces/${workspaceId}/members`).then(res => res.json()),
+      fetch(`/api/workspaces/${workspaceId}/labels`).then(res => res.json()),
+      fetch(`/api/tasks?workspaceId=${workspaceId}`).then(res => res.json())
+    ]).then(([taskData, membersData, labelsData, tasksData]) => {
       setTask(taskData);
       setMembers(membersData);
+      setWorkspaceLabels(labelsData || []);
+      setWorkspaceTasks(tasksData || []);
       setLoading(false);
     });
   }, [taskId, workspaceId]);
@@ -80,8 +88,62 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
       await deleteTask(taskId, workspaceId);
       onDeleted(taskId);
       onClose();
+    } catch (error) {
+      console.error(error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const createSubTask = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && newSubTaskTitle.trim()) {
+      e.preventDefault();
+      setSaving(true);
+      try {
+        const res = await fetch(`/api/tasks/${taskId}/subtasks`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: newSubTaskTitle.trim(),
+            priority: "none",
+            status: "todo"
+          })
+        });
+        if (res.ok) {
+          const newSubTask = await res.json();
+          const updatedTask = {
+            ...task!,
+            subTasks: [...(task!.subTasks || []), newSubTask]
+          };
+          setTask(updatedTask);
+          onUpdated(updatedTask);
+          setNewSubTaskTitle("");
+        }
+      } catch (error) {
+        console.error("Failed to create sub-task", error);
+      } finally {
+        setSaving(false);
+      }
+    }
+  };
+
+  const toggleSubTask = async (subTaskId: string, currentStatus: string) => {
+    const newStatus = currentStatus === "done" ? "todo" : "done";
+    try {
+      const res = await fetch(`/api/tasks/${subTaskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workspaceId, status: newStatus })
+      });
+      if (res.ok) {
+        const updatedSubTask = await res.json();
+        const updatedSubTasks = task!.subTasks?.map(st => st.id === subTaskId ? updatedSubTask : st) || [];
+        const updatedTask = { ...task!, subTasks: updatedSubTasks };
+        setTask(updatedTask);
+        onUpdated(updatedTask);
+      }
+    } catch (error) {
+      console.error("Failed to toggle sub-task", error);
     }
   };
 
@@ -158,6 +220,91 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
               />
             </div>
             <div className="space-y-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Labels</label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {task.labels?.map((l: any) => (
+                  <span key={l.label.id} style={{ backgroundColor: l.label.color }} className="text-xs font-bold text-white px-2 py-1 rounded">
+                    {l.label.name}
+                  </span>
+                ))}
+              </div>
+              <select
+                className="w-full bg-muted/30 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 ring-primary/50"
+                onChange={async (e) => {
+                  const labelId = e.target.value;
+                  if (!labelId) return;
+                  
+                  const selectedLabel = workspaceLabels.find(l => l.id === labelId);
+                  if (selectedLabel) {
+                    const currentLabelIds = task.labels?.map((l:any) => l.label.id) || [];
+                    const newLabelIds = [...currentLabelIds, labelId];
+                    
+                    // Optimistic UI Update
+                    const updatedTask = { ...task, labels: [...(task.labels || []), { label: selectedLabel }] };
+                    setTask(updatedTask);
+                    
+                    // Database Save
+                    await fetch(`/api/tasks/${taskId}`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ workspaceId, labelIds: newLabelIds })
+                    });
+                    
+                    onUpdated(updatedTask);
+                  }
+                }}
+                value=""
+              >
+                <option value="" disabled>+ Add Label</option>
+                {workspaceLabels.filter(wl => !task.labels?.find((tl:any) => tl.label.id === wl.id)).map(l => (
+                  <option key={l.id} value={l.id}>{l.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Story Points</label>
+              <input
+                type="number"
+                min="0"
+                value={task.storyPoints || ""}
+                onChange={(e) => setTask({ ...task, storyPoints: e.target.value ? parseInt(e.target.value) : null })}
+                onBlur={(e) => handleUpdate("storyPoints", task.storyPoints)}
+                className="w-full bg-muted/30 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 ring-primary/50"
+                placeholder="e.g. 5"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Estimated Hours</label>
+              <input
+                type="number"
+                min="0"
+                step="0.5"
+                value={task.estimatedHours || ""}
+                onChange={(e) => setTask({ ...task, estimatedHours: e.target.value ? parseFloat(e.target.value) : null })}
+                onBlur={(e) => handleUpdate("estimatedHours", task.estimatedHours)}
+                className="w-full bg-muted/30 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 ring-primary/50"
+                placeholder="e.g. 8"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actual Hours</label>
+              <input
+                type="number"
+                min="0"
+                step="0.5"
+                value={task.actualHours || ""}
+                onChange={(e) => setTask({ ...task, actualHours: e.target.value ? parseFloat(e.target.value) : null })}
+                onBlur={(e) => handleUpdate("actualHours", task.actualHours)}
+                className="w-full bg-muted/30 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 ring-primary/50"
+                placeholder="e.g. 4.5"
+              />
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <div className="space-y-2">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assignees</label>
               <div className="flex flex-wrap gap-2 items-center">
                 {task.assignees?.map(a => (
@@ -187,25 +334,78 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
             </div>
           </div>
 
+          <div className="pt-4">
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Blocked By (Dependencies)</label>
+              <select
+                className="w-full bg-muted/30 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 ring-primary/50"
+                onChange={async (e) => {
+                  const dependentTaskId = e.target.value;
+                  if (!dependentTaskId) return;
+                  await fetch(`/api/tasks/${taskId}/dependencies`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ dependentTaskId })
+                  });
+                  // UI update handled silently
+                }}
+                value=""
+              >
+                <option value="" disabled>Select a blocking task...</option>
+                {workspaceTasks.filter(t => t.id !== taskId).map(t => (
+                  <option key={t.id} value={t.id}>{t.title}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* Sub-tasks Section */}
           <div className="pt-6 border-t border-border/50 space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              <ListTodo className="w-4 h-4" />
-              <span>Sub-Tasks</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                <ListTodo className="w-4 h-4" />
+                <span>Sub-Tasks</span>
+              </div>
+              {task.subTasks && task.subTasks.length > 0 && (
+                <span className="text-xs font-medium text-muted-foreground">
+                  {task.subTasks.filter(st => st.status === 'done').length} / {task.subTasks.length}
+                </span>
+              )}
             </div>
+            
+            {/* Progress Bar */}
+            {task.subTasks && task.subTasks.length > 0 && (
+              <div className="w-full bg-muted rounded-full h-1.5 mb-4">
+                <div 
+                  className="bg-primary h-1.5 rounded-full transition-all duration-300" 
+                  style={{ width: `${(task.subTasks.filter(st => st.status === 'done').length / task.subTasks.length) * 100}%` }}
+                ></div>
+              </div>
+            )}
+
             <div className="space-y-2">
-              {/* Example static sub-tasks until Phase 7 API is ready */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 border border-border/50 group">
-                <input type="checkbox" className="w-4 h-4 rounded border-muted-foreground/30 text-primary focus:ring-primary/50 cursor-pointer" />
-                <span className="text-sm font-medium">Design Header Component</span>
-              </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 border border-border/50 group">
-                <input type="checkbox" className="w-4 h-4 rounded border-muted-foreground/30 text-primary focus:ring-primary/50 cursor-pointer" />
-                <span className="text-sm font-medium">Connect PostgreSQL Database</span>
-              </div>
-              <button className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors pt-2">
-                + Add Sub-task
-              </button>
+              {task.subTasks?.map((subTask: any) => (
+                <div key={subTask.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 border border-border/50 group">
+                  <input 
+                    type="checkbox" 
+                    checked={subTask.status === "done"}
+                    onChange={() => toggleSubTask(subTask.id, subTask.status)}
+                    className="w-4 h-4 rounded border-muted-foreground/30 text-primary focus:ring-primary/50 cursor-pointer" 
+                  />
+                  <span className={`text-sm font-medium ${subTask.status === 'done' ? 'line-through text-muted-foreground' : ''}`}>
+                    {subTask.title}
+                  </span>
+                </div>
+              ))}
+              <input
+                type="text"
+                value={newSubTaskTitle}
+                onChange={(e) => setNewSubTaskTitle(e.target.value)}
+                onKeyDown={createSubTask}
+                disabled={saving}
+                placeholder="+ Add Sub-task (Press Enter)"
+                className="w-full bg-transparent border-none text-sm font-medium outline-none placeholder:text-muted-foreground/50 pt-2 focus:ring-0"
+              />
             </div>
           </div>
         </div>

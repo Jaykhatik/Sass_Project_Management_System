@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Task } from "@/types";
-import { Calendar, AlertCircle } from "lucide-react";
+import { Calendar, AlertCircle, CheckSquare, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -41,20 +41,28 @@ export function TaskCard({ task, onClick }: Props) {
       {task.labels && task.labels.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2">
           {task.labels.map((tl) => (
-            <div
+            <span
               key={tl.label.id}
-              className="h-2 w-8 rounded-full"
+              className="text-[10px] font-bold px-2 py-0.5 rounded text-white shadow-sm"
               style={{ backgroundColor: tl.label.color }}
-              title={tl.label.name}
-            />
+            >
+              {tl.label.name}
+            </span>
           ))}
         </div>
       )}
 
-      {/* Title */}
-      <p className="text-sm font-medium text-foreground leading-snug mb-3">
-        {task.title}
-      </p>
+      {/* Title & Blocked Status */}
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <p className="text-sm font-medium text-foreground leading-snug">
+          {task.title}
+        </p>
+        {task.blockedBy && task.blockedBy.length > 0 && (
+          <span title="Blocked by another task" className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white shadow-sm bg-red-600 flex items-center gap-1 shrink-0">
+            <ShieldAlert className="w-3 h-3" /> Blocked
+          </span>
+        )}
+      </div>
 
       {/* Footer */}
       <div className="flex items-center justify-between text-xs text-muted-foreground mt-auto">
@@ -64,6 +72,14 @@ export function TaskCard({ task, onClick }: Props) {
             <div className={cn("flex items-center gap-1", new Date(task.dueDate) < new Date() && "text-red-500 font-medium")}>
               <Calendar className="w-3 h-3" />
               <span>{new Date(task.dueDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+            </div>
+          )}
+          {task.subTasks && task.subTasks.length > 0 && (
+            <div className="flex items-center gap-1 text-muted-foreground ml-1" title={`${task.subTasks.filter((st:any) => st.status === 'done').length} of ${task.subTasks.length} sub-tasks completed`}>
+              <CheckSquare className="w-3 h-3" />
+              <span>
+                {task.subTasks.filter((st:any) => st.status === 'done').length}/{task.subTasks.length}
+              </span>
             </div>
           )}
         </div>

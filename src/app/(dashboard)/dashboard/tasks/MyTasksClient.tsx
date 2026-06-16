@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import { Task } from "@/types";
-import { Loader2, Search, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { Loader2, Search, CheckCircle2, Clock, AlertCircle, ShieldAlert } from "lucide-react";
 import { TaskModal } from "@/components/task/TaskModal";
+import { useSearchParams } from "next/navigation";
 
 interface Props {
   workspaceId: string;
@@ -14,9 +15,20 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"my_tasks" | "all_tasks">("all_tasks");
-  const [search, setSearch] = useState("");
+  const searchParams = useSearchParams();
+  const queryParam = searchParams.get("q");
+  const [search, setSearch] = useState(queryParam || "");
+  
+  useEffect(() => {
+    if (queryParam !== null) {
+      setSearch(queryParam);
+    }
+  }, [queryParam]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  
+  const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
   
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
@@ -57,11 +69,58 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
   };
 
   const filteredTasks = tasks.filter((task) => {
-    const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase());
+    const searchLower = search.toLowerCase();
+    const matchesSearch = task.title.toLowerCase().includes(searchLower) || 
+                          (task.description && task.description.toLowerCase().includes(searchLower));
     const matchesStatus = statusFilter === "all" || task.status === statusFilter;
     const matchesPriority = priorityFilter === "all" || task.priority === priorityFilter;
     return matchesSearch && matchesStatus && matchesPriority;
   });
+
+  const handleSelectAll = () => {
+    if (selectedTasks.size === filteredTasks.length) {
+      setSelectedTasks(new Set());
+    } else {
+      setSelectedTasks(new Set(filteredTasks.map(t => t.id)));
+    }
+  };
+
+  const toggleTaskSelection = (taskId: string) => {
+    const newSelection = new Set(selectedTasks);
+    if (newSelection.has(taskId)) {
+      newSelection.delete(taskId);
+    } else {
+      newSelection.add(taskId);
+    }
+    setSelectedTasks(newSelection);
+  };
+
+  const executeBulkAction = async (action: string) => {
+    if (selectedTasks.size === 0) return;
+    setBulkActionLoading(true);
+    try {
+      if (action === "delete") {
+        for (const id of Array.from(selectedTasks)) {
+          await fetch(`/api/tasks/${id}?workspaceId=${workspaceId}`, { method: "DELETE" });
+        }
+      } else if (action.startsWith("status:")) {
+        const status = action.split(":")[1];
+        for (const id of Array.from(selectedTasks)) {
+          await fetch(`/api/tasks/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ workspaceId, status })
+          });
+        }
+      }
+      await fetchTasks();
+      setSelectedTasks(new Set());
+    } catch (error) {
+      console.error("Bulk action failed", error);
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -134,6 +193,35 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
         </select>
       </div>
 
+      {/* Bulk Actions Bar */}
+      {selectedTasks.size > 0 && (
+        <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 flex items-center justify-between animate-in fade-in slide-in-from-top-4">
+          <span className="text-sm font-semibold text-primary">
+            {selectedTasks.size} tasks selected
+          </span>
+          <div className="flex gap-2">
+            <select
+              onChange={(e) => executeBulkAction(`status:${e.target.value}`)}
+              disabled={bulkActionLoading}
+              value=""
+              className="bg-background border rounded px-3 py-1 text-xs font-medium cursor-pointer"
+            >
+              <option value="" disabled>Change Status...</option>
+              <option value="todo">To Do</option>
+              <option value="in_progress">In Progress</option>
+              <option value="done">Done</option>
+            </select>
+            <button
+              onClick={() => executeBulkAction("delete")}
+              disabled={bulkActionLoading}
+              className="bg-red-500/10 text-red-500 border border-red-500/20 px-3 py-1 rounded text-xs font-bold hover:bg-red-500/20"
+            >
+              Delete Selected
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Task List */}
       <div className="bg-card border rounded-2xl overflow-hidden shadow-sm">
         {filteredTasks.length === 0 ? (
@@ -143,14 +231,28 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
           </div>
         ) : (
           <div className="divide-y divide-border/50">
+            <div className="bg-muted/30 p-4 border-b border-border/50 flex gap-4">
+               <input 
+                 type="checkbox" 
+                 checked={selectedTasks.size === filteredTasks.length && filteredTasks.length > 0}
+                 onChange={handleSelectAll}
+                 className="w-4 h-4 rounded mt-0.5 cursor-pointer"
+               />
+               <span className="text-xs font-bold text-muted-foreground uppercase">Select All</span>
+            </div>
             {filteredTasks.map((task) => (
               <div
                 key={task.id}
-                onClick={() => setSelectedTaskId(task.id)}
-                className="group flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors"
+                className="group flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-start gap-4">
-                  <div className="mt-1">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedTasks.has(task.id)}
+                    onChange={() => toggleTaskSelection(task.id)}
+                    className="w-4 h-4 rounded mt-1 cursor-pointer"
+                  />
+                  <div className="mt-1 cursor-pointer" onClick={() => setSelectedTaskId(task.id)}>
                     {task.status === 'done' ? (
                       <CheckCircle2 className="w-5 h-5 text-green-500" />
                     ) : task.status === 'in_progress' ? (
@@ -159,9 +261,19 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
                       <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/30" />
                     )}
                   </div>
-                  <div>
-                    <h4 className="text-sm font-semibold group-hover:text-primary transition-colors">
+                  <div className="cursor-pointer" onClick={() => setSelectedTaskId(task.id)}>
+                    <h4 className="text-sm font-semibold group-hover:text-primary transition-colors flex items-center gap-2">
                       {task.title}
+                      {task.blockedBy && task.blockedBy.length > 0 && (
+                        <span title="Blocked by another task" className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white shadow-sm bg-red-600 flex items-center gap-1 shrink-0">
+                          <ShieldAlert className="w-3 h-3" /> Blocked
+                        </span>
+                      )}
+                      {task.labels && task.labels.map((tl: any) => (
+                        <span key={tl.label.id} className="text-[10px] font-bold px-2 py-0.5 rounded text-white shadow-sm" style={{ backgroundColor: tl.label.color }}>
+                          {tl.label.name}
+                        </span>
+                      ))}
                     </h4>
                     <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
                       <span className="font-medium text-foreground/70">{(task as any).project?.name || "Unknown Project"}</span>
@@ -174,10 +286,40 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
                         </>
                       )}
                     </p>
+                    
+                    {/* Render Sub-tasks */}
+                    {task.subTasks && task.subTasks.length > 0 && (
+                      <div className="mt-3 flex flex-col gap-1.5 ml-1 border-l-2 border-muted pl-3">
+                        {task.subTasks.map((st: any) => (
+                          <div key={st.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+                            {st.status === 'done' ? (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                            ) : (
+                              <div className="w-3.5 h-3.5 rounded-sm border border-muted-foreground/40 shrink-0" />
+                            )}
+                            <span className={st.status === 'done' ? 'line-through opacity-70' : ''}>
+                              {st.title}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
+                  <div className="hidden md:flex items-center gap-4 text-xs text-muted-foreground mr-4">
+                    {task.storyPoints != null && (
+                      <span title="Story Points" className="flex items-center gap-1 font-mono bg-muted/50 px-2 py-1 rounded">
+                        ⭐ {task.storyPoints}
+                      </span>
+                    )}
+                    {(task.estimatedHours != null || task.actualHours != null) && (
+                      <span title="Hours (Actual / Estimated)" className="flex items-center gap-1 font-mono bg-muted/50 px-2 py-1 rounded">
+                        ⏱️ {task.actualHours || 0} / {task.estimatedHours || 0}h
+                      </span>
+                    )}
+                  </div>
                   <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded border ${getPriorityColor(task.priority)}`}>
                     {task.priority || "No Priority"}
                   </span>

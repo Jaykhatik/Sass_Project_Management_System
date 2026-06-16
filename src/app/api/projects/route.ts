@@ -60,7 +60,7 @@ export async function GET(request: Request) {
         createdBy: {
           select: { id: true, name: true, email: true, avatarUrl: true },
         },
-        _count: { select: { tasks: true } },
+        _count: { select: { tasks: { where: { parentTaskId: null } } } },
       },
       orderBy: { createdAt: "desc" },
     });

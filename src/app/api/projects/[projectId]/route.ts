@@ -32,17 +32,20 @@ export async function GET(
               orderBy: { position: "asc" },
               include: {
                 tasks: {
+                  where: { parentTaskId: null },
                   orderBy: { position: "asc" },
                   include: {
                     assignees: { include: { user: { select: { id: true, name: true, avatarUrl: true } } } },
                     labels: { include: { label: true } },
+                    subTasks: { select: { id: true, title: true, status: true }, orderBy: { createdAt: "asc" } },
+                    blockedBy: { select: { blockerTaskId: true } },
                   },
                 },
               },
             },
           },
         },
-        _count: { select: { tasks: true } },
+        _count: { select: { tasks: { where: { parentTaskId: null } } } },
       },
     });
     if (!project) {
@@ -63,9 +66,9 @@ export async function GET(
         createdAt: project.createdAt,
         updatedAt: project.updatedAt,
       },
-      createdBy: project.createdBy,
-      boards: project.boards,
-      taskCount: project._count?.tasks || 0,
+      createdBy: project.createdBy as any,
+      boards: (project as any).boards,
+      taskCount: (project as any)._count?.tasks || 0,
     };
 
     return NextResponse.json(responsePayload);

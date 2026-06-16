@@ -21,7 +21,8 @@ export async function GET(
       include: {
         assignees: { include: { user: { select: { id: true, name: true, avatarUrl: true } } } },
         labels: { include: { label: true } },
-        column: { select: { id: true, name: true } }
+        column: { select: { id: true, name: true } },
+        subTasks: { select: { id: true, title: true, status: true, priority: true } }
       }
     });
 
@@ -42,7 +43,7 @@ export async function PATCH(
 
     const { taskId } = await params;
     const body = await request.json();
-    const { workspaceId, title, description, priority, status, dueDate, columnId, assigneeIds } = body;
+    const { workspaceId, title, description, priority, status, dueDate, columnId, assigneeIds, estimatedHours, actualHours, storyPoints, parentTaskId, labelIds } = body;
 
     if (!workspaceId) return NextResponse.json({ error: "workspaceId required" }, { status: 400 });
 
@@ -68,6 +69,44 @@ export async function PATCH(
       };
     }
 
+    let labelsUpdate = {};
+    if (labelIds !== undefined && Array.isArray(labelIds)) {
+      labelsUpdate = {
+        labels: {
+          deleteMany: {},
+          create: labelIds.map((labelId: string) => ({
+            labelId
+          }))
+        }
+      };
+    }
+
+    let finalColumnId = columnId;
+    if (status !== undefined && columnId === undefined) {
+      const currentTask = await prisma.task.findUnique({
+        where: { id: taskId },
+        select: { boardId: true }
+      });
+      if (currentTask?.boardId) {
+        const boardColumns = await prisma.column.findMany({
+          where: { boardId: currentTask.boardId },
+          orderBy: { position: "asc" }
+        });
+        
+        if (boardColumns.length > 0) {
+          let targetCol = boardColumns[0];
+          if (status === "done" || status === "completed") {
+            targetCol = boardColumns[boardColumns.length - 1];
+          } else if (status === "in_progress") {
+            targetCol = boardColumns.find(c => c.name.toLowerCase().includes("progress")) || boardColumns[1] || boardColumns[0];
+          } else if (status === "in_review") {
+            targetCol = boardColumns.find(c => c.name.toLowerCase().includes("review")) || boardColumns[boardColumns.length - 2] || boardColumns[0];
+          }
+          finalColumnId = targetCol.id;
+        }
+      }
+    }
+
     const updated = await prisma.task.update({
       where: { id: taskId },
       data: {
@@ -75,14 +114,20 @@ export async function PATCH(
         ...(description !== undefined && { description }),
         ...(priority !== undefined && { priority }),
         ...(status !== undefined && { status }),
-        ...(columnId !== undefined && { columnId }),
+        ...(finalColumnId !== undefined && { columnId: finalColumnId }),
         ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }),
-        ...assigneesUpdate
+        ...(estimatedHours !== undefined && { estimatedHours }),
+        ...(actualHours !== undefined && { actualHours }),
+        ...(storyPoints !== undefined && { storyPoints }),
+        ...(parentTaskId !== undefined && { parentTaskId }),
+        ...assigneesUpdate,
+        ...labelsUpdate
       },
       include: {
         assignees: { include: { user: { select: { id: true, name: true, avatarUrl: true } } } },
         labels: { include: { label: true } },
-        column: { select: { id: true, name: true } }
+        column: { select: { id: true, name: true } },
+        subTasks: { select: { id: true, title: true, status: true, priority: true } }
       }
     });
 

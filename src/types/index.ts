@@ -72,8 +72,13 @@ export interface Task {
   status: string;
   columnId?: string;
   dueDate: string | null;
+  estimatedHours?: number | null;
+  actualHours?: number | null;
+  storyPoints?: number | null;
   assignees?: Assignee[];
   labels?: Label[];
+  subTasks?: Task[];
+  blockedBy?: { blockerTaskId: string }[];
 }
 
 export interface Assignee {

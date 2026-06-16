@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, Bell, Menu, LogOut } from 'lucide-react';
 import { useDispatch } from 'react-redux';
@@ -9,6 +9,7 @@ import { toggleSidebar } from '@/store/slices/uiSlice';
 export function Header() {
   const dispatch = useDispatch();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", {
@@ -17,6 +18,13 @@ export function Header() {
     });
     router.push("/login");
     router.refresh();
+  };
+
+  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && searchQuery.trim()) {
+      router.push(`/dashboard/tasks?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery("");
+    }
   };
 
   return (
@@ -36,6 +44,9 @@ export function Header() {
           <input 
             type="text" 
             placeholder="Search tasks, projects, or people..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearch}
             className="w-full h-10 pl-10 pr-4 rounded-full border bg-muted/30 focus:bg-background focus:ring-2 focus:ring-primary focus:outline-none transition-all text-sm"
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">

@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { workspaceId, projectId, boardId, columnId, title, description, priority, dueDate } = body;
+    const { workspaceId, projectId, boardId, columnId, title, description, priority, dueDate, parentTaskId } = body;
 
     if (!workspaceId || !projectId || !boardId || !columnId || !title) {
       return NextResponse.json(
@@ -33,14 +33,16 @@ export async function POST(request: Request) {
        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Determine the position for the new task (bottom of the column)
-    const maxPositionTask = await prisma.task.findFirst({
-      where: { columnId },
-      orderBy: { position: "desc" },
-      select: { position: true },
-    });
-
-    const newPosition = maxPositionTask ? maxPositionTask.position + 1024 : 1024; // Use large spacing to allow dropping between later
+    // Determine the position for the new task (bottom of the column) if it's a root task
+    let newPosition = 1024;
+    if (columnId) {
+      const maxPositionTask = await prisma.task.findFirst({
+        where: { columnId },
+        orderBy: { position: "desc" },
+        select: { position: true },
+      });
+      if (maxPositionTask) newPosition = maxPositionTask.position + 1024;
+    }
 
     // Create the task
     const task = await prisma.task.create({
@@ -49,6 +51,7 @@ export async function POST(request: Request) {
         projectId,
         boardId,
         columnId,
+        parentTaskId,
         title,
         description,
         priority: priority || "medium",
@@ -90,6 +93,7 @@ export async function GET(request: Request) {
     const workspaceId = searchParams.get("workspaceId");
     const projectId = searchParams.get("projectId");
     const assigneeId = searchParams.get("assigneeId");
+    const q = searchParams.get("q");
 
     if (!workspaceId) {
       return NextResponse.json({ error: "workspaceId is required" }, { status: 400 });
@@ -110,7 +114,7 @@ export async function GET(request: Request) {
     }
 
     // Build the query dynamically
-    const whereClause: any = { workspaceId };
+    const whereClause: any = { workspaceId, parentTaskId: null };
     
     if (projectId) {
       whereClause.projectId = projectId;
@@ -120,6 +124,13 @@ export async function GET(request: Request) {
       whereClause.assignees = {
         some: { userId: assigneeId }
       };
+    }
+
+    if (q) {
+      whereClause.OR = [
+        { title: { contains: q, mode: 'insensitive' } },
+        { description: { contains: q, mode: 'insensitive' } }
+      ];
     }
 
     // Fetch tasks
@@ -136,7 +147,12 @@ export async function GET(request: Request) {
         },
         project: {
           select: { id: true, name: true }
-        }
+        },
+        subTasks: {
+          select: { id: true, title: true, status: true },
+          orderBy: { createdAt: "asc" }
+        },
+        blockedBy: { select: { blockerTaskId: true } }
       },
       orderBy: { createdAt: "desc" }
     });

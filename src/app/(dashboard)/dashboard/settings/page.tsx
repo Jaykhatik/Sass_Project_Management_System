@@ -1,4 +1,5 @@
 import { SettingsForm } from './SettingsForm';
+import { SettingsClient } from './SettingsClient';
 import { getPrimaryWorkspaceForUser, getSessionUser } from '@/lib/auth';
 import { notFound } from 'next/navigation';
 
@@ -22,6 +23,10 @@ export default async function SettingsPage() {
       <div className="border rounded-xl bg-card shadow-sm p-6">
         <h2 className="text-lg font-semibold mb-4 border-b pb-2">General</h2>
         <SettingsForm workspace={workspace} />
+      </div>
+
+      <div className="border rounded-xl bg-card shadow-sm p-6 mt-6">
+        <SettingsClient workspaceId={workspace.id} />
       </div>
 
       <div className="border rounded-xl border-destructive/20 bg-destructive/5 p-6 space-y-3">

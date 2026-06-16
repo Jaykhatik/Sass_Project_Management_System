@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AlertCircle, ArrowUp, Minus, ArrowDown, Clock, User } from "lucide-react";
+import { AlertCircle, ArrowUp, Minus, ArrowDown, Clock, User, CheckCircle2, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { Column } from "@/types";
@@ -42,10 +42,11 @@ export function ListView({ columns }: Props) {
   return (
     <div className="border rounded-xl overflow-hidden bg-card shadow-sm">
       {/* Table Header */}
-      <div className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 px-4 py-2.5 bg-muted/50 border-b text-xs font-medium text-muted-foreground uppercase tracking-wide">
+      <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-2.5 bg-muted/50 border-b text-xs font-medium text-muted-foreground uppercase tracking-wide">
         <span>Task</span>
         <span className="w-24 text-center">Status</span>
         <span className="w-20 text-center">Priority</span>
+        <span className="w-32 text-center">Metrics</span>
         <span className="w-28 text-center">Assignee</span>
         <span className="w-24 text-center">Due Date</span>
       </div>
@@ -58,11 +59,18 @@ export function ListView({ columns }: Props) {
           return (
             <div
               key={task.id}
-              className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 items-center px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer"
+              className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 items-center px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer"
             >
               {/* Title + Labels */}
               <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{task.title}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium truncate">{task.title}</p>
+                  {task.blockedBy && task.blockedBy.length > 0 && (
+                    <span title="Blocked by another task" className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white shadow-sm bg-red-600 flex items-center gap-1 shrink-0">
+                      <ShieldAlert className="w-3 h-3" /> Blocked
+                    </span>
+                  )}
+                </div>
                 <div className="flex gap-1 mt-0.5 flex-wrap">
                   <span className="text-xs text-muted-foreground">{task.columnName}</span>
                   {task.labels?.map(({ label }) => (
@@ -78,6 +86,24 @@ export function ListView({ columns }: Props) {
                     </span>
                   ))}
                 </div>
+                
+                {/* Render Sub-tasks */}
+                {task.subTasks && task.subTasks.length > 0 && (
+                  <div className="mt-2.5 flex flex-col gap-1 ml-1 border-l-2 border-muted pl-2.5">
+                    {task.subTasks.map((st: any) => (
+                      <div key={st.id} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        {st.status === 'done' ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
+                        ) : (
+                          <div className="w-3 h-3 rounded-sm border border-muted-foreground/40 shrink-0 ml-[1px]" />
+                        )}
+                        <span className={st.status === 'done' ? 'line-through opacity-70 truncate' : 'truncate'}>
+                          {st.title}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Status */}
@@ -98,6 +124,23 @@ export function ListView({ columns }: Props) {
                 <span className="text-xs text-muted-foreground capitalize">
                   {task.priority}
                 </span>
+              </div>
+
+              {/* Metrics (Story Points & Hours) */}
+              <div className="w-32 flex flex-col items-center justify-center gap-1">
+                {task.storyPoints != null && (
+                  <span title="Story Points" className="text-[10px] flex items-center gap-1 font-mono bg-muted/50 px-2 py-0.5 rounded text-muted-foreground w-full justify-center">
+                    ⭐ {task.storyPoints}
+                  </span>
+                )}
+                {(task.estimatedHours != null || task.actualHours != null) && (
+                  <span title="Hours (Actual / Estimated)" className="text-[10px] flex items-center gap-1 font-mono bg-muted/50 px-2 py-0.5 rounded text-muted-foreground w-full justify-center">
+                    ⏱️ {task.actualHours || 0} / {task.estimatedHours || 0}h
+                  </span>
+                )}
+                {task.storyPoints == null && task.estimatedHours == null && task.actualHours == null && (
+                  <span className="text-xs text-muted-foreground">—</span>
+                )}
               </div>
 
               {/* Assignees */}

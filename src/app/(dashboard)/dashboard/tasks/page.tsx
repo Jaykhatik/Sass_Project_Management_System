@@ -1,6 +1,7 @@
 import { getPrimaryWorkspaceForUser, getSessionUser } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
 import { MyTasksClient } from "./MyTasksClient";
+import { Suspense } from "react";
 
 export const metadata = {
   title: "My Tasks | SaaS Project Management",
@@ -32,7 +33,9 @@ export default async function MyTasksPage() {
         </p>
       </div>
 
-      <MyTasksClient workspaceId={workspace.id} userId={user.id} />
+      <Suspense fallback={<div className="flex justify-center p-12"><div className="w-8 h-8 rounded-full border-4 border-primary border-t-transparent animate-spin" /></div>}>
+        <MyTasksClient workspaceId={workspace.id} userId={user.id} />
+      </Suspense>
     </div>
   );
 }
