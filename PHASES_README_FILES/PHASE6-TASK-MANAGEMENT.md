@@ -10,6 +10,8 @@
 - Supports adding custom labels (e.g., "Bug", "Feature") to tasks.
 - Implements drag-and-drop functionality to move tasks between columns.
 - Implements deletion of tasks.
+- Integrates a rich Markdown Editor (`@uiw/react-md-editor`) for task descriptions.
+- Includes a gorgeous UI layout for nesting and managing Sub-Tasks.
 - **Provides a global "My Tasks" page to view, search, and filter all tasks across the workspace.**
 
 ## Files Involved (To Be Created/Updated)
@@ -48,8 +50,6 @@
 
 ## Future Enhancements (Phase 6+)
 
-- **Rich Text Descriptions:** Upgrade simple textareas to markdown/rich-text editors.
-- **Subtasks:** Break large tasks down into smaller, checkable subtasks.
 - **Comments:** Allow users to chat inside the task modal.
 - **Attachments:** Support for uploading images/files to a task.
 
@@ -80,12 +80,13 @@
 2. Release the mouse button. The card will snap into the new column.
 3. *Behind the scenes, the frontend fires a `PATCH` request to save this new location in the database.*
 
-**Step 4: Test the Task Modal (Editing & Assigning)**
+**Step 4: Test the Task Modal (Editing, Markdown & Assigning)**
 1. Click on the task card you just moved.
 2. The **Task Modal** will slide into view.
-3. Click the title at the top to change it, or add a detailed description in the text box.
-4. Try assigning yourself to the task using the new **Assignees dropdown**.
-5. *Because of the auto-save architecture, every time you click away from an input or select an assignee, it automatically saves to the database.*
+3. Click the title at the top to change it.
+4. Try typing `# Hello` or `**bold**` inside the new **Markdown Editor** description box!
+5. Try assigning yourself to the task using the new **Assignees dropdown**.
+6. *Because of the auto-save architecture, every time you click away from an input or select an assignee, it automatically saves to the database.*
 
 **Step 5: Test Deletion**
 1. While inside the Task Modal, click the **"Delete"** button in the top right corner.

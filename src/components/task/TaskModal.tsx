@@ -2,8 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import { Task, Column } from "@/types";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, ListTodo, Tag } from "lucide-react";
 import { updateTask, deleteTask } from "@/services/taskService";
+import dynamic from "next/dynamic";
+
+const MDEditor = dynamic(
+  () => import("@uiw/react-md-editor").then((mod) => mod.default),
+  { ssr: false }
+);
 
 interface Props {
   taskId: string;
@@ -128,15 +134,17 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
             placeholder="Task Title"
           />
 
-          <div className="space-y-3">
+          <div className="space-y-3" data-color-mode="dark">
             <label className="text-sm font-semibold text-muted-foreground">Description</label>
-            <textarea
-              value={task.description || ""}
-              onChange={(e) => setTask({ ...task, description: e.target.value })}
-              onBlur={(e) => handleUpdate("description", e.target.value)}
-              className="w-full min-h-[150px] bg-muted/30 border rounded-xl p-4 text-sm outline-none focus:ring-2 ring-primary/50 resize-y"
-              placeholder="Add a more detailed description..."
-            />
+            <div onBlur={() => handleUpdate("description", task.description)}>
+              <MDEditor
+                value={task.description || ""}
+                onChange={(val) => setTask({ ...task, description: val || "" })}
+                preview="edit"
+                height={200}
+                className="w-full bg-muted/30 border rounded-xl overflow-hidden shadow-none outline-none focus-within:ring-2 ring-primary/50"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
@@ -176,6 +184,28 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
                   ))}
                 </select>
               </div>
+            </div>
+          </div>
+
+          {/* Sub-tasks Section */}
+          <div className="pt-6 border-t border-border/50 space-y-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+              <ListTodo className="w-4 h-4" />
+              <span>Sub-Tasks</span>
+            </div>
+            <div className="space-y-2">
+              {/* Example static sub-tasks until Phase 7 API is ready */}
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 border border-border/50 group">
+                <input type="checkbox" className="w-4 h-4 rounded border-muted-foreground/30 text-primary focus:ring-primary/50 cursor-pointer" />
+                <span className="text-sm font-medium">Design Header Component</span>
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/20 border border-border/50 group">
+                <input type="checkbox" className="w-4 h-4 rounded border-muted-foreground/30 text-primary focus:ring-primary/50 cursor-pointer" />
+                <span className="text-sm font-medium">Connect PostgreSQL Database</span>
+              </div>
+              <button className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors pt-2">
+                + Add Sub-task
+              </button>
             </div>
           </div>
         </div>
