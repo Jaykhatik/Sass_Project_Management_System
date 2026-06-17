@@ -27,3 +27,7 @@ export const TASK_API_ROUTES = {
   dependencies: (taskId: string) => `/tasks/${taskId}/dependencies`,
   reorder: (boardId: string) => `/boards/${boardId}/tasks/reorder`,
 };
+
+export const BOARD_API_ROUTES = {
+  columns: (boardId: string) => `/boards/${boardId}/columns`,
+};

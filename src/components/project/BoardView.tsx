@@ -6,6 +6,7 @@ import { Plus, MoreHorizontal } from "lucide-react";
 import { TaskCard } from "@/components/task/TaskCard";
 import { CreateTaskDialog } from "@/components/task/CreateTaskDialog";
 import { TaskModal } from "@/components/task/TaskModal";
+import { CreateColumnDialog } from "@/components/project/CreateColumnDialog";
 import { reorderTasks, updateTask } from "@/services/taskService";
 import { Column, Task } from "@/types";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
   const router = useRouter();
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const [creatingInCol, setCreatingInCol] = useState<string | null>(null);
+  const [isCreatingColumn, setIsCreatingColumn] = useState(false);
   const [activeTask, setActiveTask] = useState<string | null>(null);
 
   useEffect(() => {
@@ -102,7 +104,10 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-end px-1">
-        <button className="flex my-4 items-center justify-center gap-2 px-5 py-3 rounded-xl border-2 border-dashed border-border/60 bg-muted/20 text-sm font-bold text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 shadow-sm group">
+        <button 
+          onClick={() => setIsCreatingColumn(true)}
+          className="flex my-4 items-center justify-center gap-2 px-5 py-3 rounded-xl border-2 border-dashed border-border/60 bg-muted/20 text-sm font-bold text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 shadow-sm group"
+        >
           <Plus className="w-4 h-4 transition-transform group-hover:scale-125" />
           Add Section
         </button>
@@ -168,6 +173,9 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
           </div>
         );
       })}
+      
+
+
       </div>
 
       {/* Modals */}
@@ -180,6 +188,19 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
           onClose={() => setCreatingInCol(null)}
           onCreated={(task) => {
             setColumns(columns.map(c => c.id === creatingInCol ? { ...c, tasks: [...c.tasks, task] } : c));
+            router.refresh();
+          }}
+        />
+      )}
+
+      {isCreatingColumn && (
+        <CreateColumnDialog
+          workspaceId={workspaceId}
+          boardId={boardId}
+          onClose={() => setIsCreatingColumn(false)}
+          onCreated={(newCol) => {
+            setColumns([...columns, newCol]);
+            setIsCreatingColumn(false);
             router.refresh();
           }}
         />
