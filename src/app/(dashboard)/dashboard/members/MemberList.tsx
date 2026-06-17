@@ -1,22 +1,33 @@
 "use client";
 
 import React, { useState } from "react";
-import { Shield, Trash2, User as UserIcon } from "lucide-react";
+import { Shield, Trash2, User as UserIcon, Plus, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { WorkspaceMember } from "@/types";
 import { updateMemberRole, deleteMember } from "@/services/workspaceService";
+import { revokeInvite } from "@/services/inviteService";
+import { InviteMemberModal } from "@/components/workspace/InviteMemberModal";
 
 export function MemberList({
   initialMembers,
+  initialInvites,
   workspaceId,
+  currentUserId,
 }: {
   initialMembers: WorkspaceMember[];
+  initialInvites?: any[];
   workspaceId: string;
+  currentUserId: string;
 }) {
   const [members, setMembers] = useState<WorkspaceMember[]>(initialMembers);
+  const [invites, setInvites] = useState<any[]>(initialInvites || []);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const router = useRouter();
+
+  const currentUser = members.find(m => m.user.id === currentUserId);
+  const isPrivileged = currentUser?.role === 'owner';
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     setLoadingId(userId);
@@ -54,8 +65,40 @@ export function MemberList({
     }
   };
 
+  const handleRevoke = async (inviteId: string) => {
+    if (!confirm("Are you sure you want to revoke this invitation?")) return;
+    setLoadingId(inviteId);
+    try {
+      await revokeInvite(workspaceId, inviteId);
+      setInvites(invites.filter((i) => i.id !== inviteId));
+      router.refresh();
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
   return (
-    <div className="divide-y divide-border">
+    <div className="space-y-6">
+      {isPrivileged && (
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setIsInviteModalOpen(true)}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 text-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Invite Member
+          </button>
+        </div>
+      )}
+
+      <div className="border rounded-xl bg-card shadow-sm overflow-hidden divide-y divide-border">
+        {/* Workspace Members Section */}
+        <div className="bg-muted/30 px-4 py-2 border-b">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Active Members</h3>
+        </div>
+        <div className="divide-y divide-border">
       {members.map((member) => (
         <div
           key={member.membership_id}
@@ -94,33 +137,76 @@ export function MemberList({
               <span className="capitalize">{member.role}</span>
             </div>
 
-            {member.role !== "owner" && (
-              <div className="flex items-center gap-2">
-                <select
-                  disabled={loadingId === member.user.id}
-                  value={member.role}
-                  onChange={(e) =>
-                    handleRoleChange(member.user.id, e.target.value)
-                  }
-                  className="text-xs bg-background border rounded-md px-2 py-1.5 disabled:opacity-50 outline-none focus:ring-2 ring-primary/50"
-                >
-                  <option value="admin">Admin</option>
-                  <option value="member">Member</option>
-                  <option value="guest">Guest</option>
-                </select>
+            <div className="flex flex-col gap-1.5 items-end">
 
+              {isPrivileged && member.role !== "owner" && member.user.id !== currentUserId && (
                 <button
                   onClick={() => handleRemove(member.user.id)}
                   disabled={loadingId === member.user.id}
-                  className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors disabled:opacity-50"
+                  className="text-xs text-destructive hover:text-destructive/80 font-medium flex items-center gap-1 mt-1 disabled:opacity-50"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3 h-3" />
+                  Remove
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       ))}
+      </div>
+      </div>
+
+      {/* Pending Invites Section */}
+      {invites.length > 0 && (
+        <div className="border rounded-xl bg-card shadow-sm overflow-hidden divide-y divide-border mt-6">
+          <div className="bg-muted/30 px-4 py-2 border-b">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pending Invitations</h3>
+          </div>
+          <div className="divide-y divide-border">
+            {invites.map((invite) => (
+              <div key={invite.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0 shadow-sm">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm text-muted-foreground">{invite.email}</p>
+                    <p className="text-xs text-muted-foreground/70">
+                      Invited by {invite.inviter.name || invite.inviter.email}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-muted/50 text-muted-foreground">
+                    <span className="capitalize">{invite.role}</span>
+                  </div>
+                  {isPrivileged && (
+                    <button
+                      onClick={() => handleRevoke(invite.id)}
+                      disabled={loadingId === invite.id}
+                      className="text-xs text-destructive hover:text-destructive/80 font-medium flex items-center gap-1 disabled:opacity-50"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Revoke
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {isInviteModalOpen && (
+        <InviteMemberModal
+          workspaceId={workspaceId}
+          onClose={() => setIsInviteModalOpen(false)}
+          onSuccess={() => {
+            router.refresh();
+          }}
+        />
+      )}
     </div>
   );
 }

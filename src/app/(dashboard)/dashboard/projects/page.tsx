@@ -19,6 +19,7 @@ export default async function ProjectsPage() {
       <ProjectsClient
         projects={projects.projects as unknown as Parameters<typeof ProjectsClient>[0]["projects"]}
         workspaceId={workspace.id}
+        isOwner={workspace.ownerId === user.id}
       />
     </div>
   );

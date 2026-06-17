@@ -53,6 +53,8 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
       const updated = await updateTask(taskId, { assigneeIds: newAssigneeIds, workspaceId });
       setTask(updated);
       onUpdated(updated);
+    } catch (err: any) {
+      alert(err.message || "Failed to update assignees. You might not have permission.");
     } finally {
       setSaving(false);
     }
@@ -77,6 +79,8 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
       const updated = await updateTask(taskId, { [field]: value, workspaceId });
       setTask(updated);
       onUpdated(updated);
+    } catch (err: any) {
+      alert(err.message || "Failed to update task. You might not have permission.");
     } finally {
       setSaving(false);
     }
@@ -89,8 +93,8 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
       await deleteTask(taskId, workspaceId);
       onDeleted(taskId);
       onClose();
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      alert(error.message || "Failed to delete task. You might not have permission.");
     } finally {
       setSaving(false);
     }

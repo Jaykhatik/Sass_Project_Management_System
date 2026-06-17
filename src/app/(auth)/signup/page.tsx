@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowRight, CheckCircle2, Sparkles, UserRound } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight, CheckCircle2, Sparkles, UserRound, Loader2 } from "lucide-react";
 import { register } from "@/services/authService";
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextUrl = searchParams.get("next");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,8 +21,15 @@ export default function SignupPage() {
     setLoading(true);
     setError("");
     try {
-      const data = await register({ name, email, password });
-      router.push(data.redirectTo || `/login?email=${encodeURIComponent(email)}`);
+      const isInvite = nextUrl?.includes('/invite/');
+      const data = await register({ name, email, password, isInvite });
+      
+      let redirectUrl = data.redirectTo || `/login?email=${encodeURIComponent(email)}`;
+      if (nextUrl) {
+        redirectUrl += redirectUrl.includes('?') ? `&next=${encodeURIComponent(nextUrl)}` : `?next=${encodeURIComponent(nextUrl)}`;
+      }
+      
+      router.push(redirectUrl);
       // Removed router.refresh() because login needs no refresh if it's just client navigation.
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to create account");
@@ -29,6 +38,90 @@ export default function SignupPage() {
     }
   };
 
+  return (
+    <div className="w-full max-w-md">
+      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-[0_20px_60px_-20px_rgba(15,23,42,0.16)]">
+        <div className="mb-8">
+          <p className="text-sm font-medium uppercase tracking-[0.24em] text-emerald-600">
+            Sign up
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
+            Create your account
+          </h2>
+          <p className="mt-2 text-sm text-slate-500">
+            Start your workspace and get going in one step.
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={onSubmit} className="space-y-4">
+          <label className="block">
+            <span className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+              <UserRound className="h-4 w-4 text-slate-400" />
+              Full name
+            </span>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)]"
+              placeholder="Jane Smith"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-700">Email</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)]"
+              placeholder="you@example.com"
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-2 block text-sm font-medium text-slate-700">Password</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)]"
+              placeholder="Minimum 8 characters"
+            />
+          </label>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? "Creating account..." : "Create account"}
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </button>
+        </form>
+
+        <p className="mt-6 text-center text-sm text-slate-500">
+          Already have an account?{" "}
+          <Link href="/login" className="font-medium text-emerald-600 hover:text-emerald-700">
+            Sign in
+          </Link>
+        </p>
+
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          Signing up creates your first workspace automatically. No welcome project is added.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function SignupPage() {
   return (
     <div className="min-h-screen grid lg:grid-cols-[0.95fr_1.05fr] bg-[#f8fafc]">
       <div className="hidden lg:flex flex-col justify-between overflow-hidden bg-slate-950 p-12 text-white">
@@ -59,86 +152,14 @@ export default function SignupPage() {
       </div>
 
       <div className="flex items-center justify-center p-6 sm:p-10">
-        <div className="w-full max-w-md">
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-[0_20px_60px_-20px_rgba(15,23,42,0.16)]">
-            <div className="mb-8">
-              <p className="text-sm font-medium uppercase tracking-[0.24em] text-emerald-600">
-                Sign up
-              </p>
-              <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
-                Create your account
-              </h2>
-              <p className="mt-2 text-sm text-slate-500">
-                Start your workspace and get going in one step.
-              </p>
+          <Suspense fallback={
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
             </div>
-
-            {error && (
-              <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={onSubmit} className="space-y-4">
-              <label className="block">
-                <span className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-                  <UserRound className="h-4 w-4 text-slate-400" />
-                  Full name
-                </span>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)]"
-                  placeholder="Jane Smith"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-700">Email</span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)]"
-                  placeholder="you@example.com"
-                />
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-700">Password</span>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-400 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)]"
-                  placeholder="Minimum 8 characters"
-                />
-              </label>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {loading ? "Creating account..." : "Create account"}
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </button>
-            </form>
-
-            <p className="mt-6 text-center text-sm text-slate-500">
-              Already have an account?{" "}
-              <Link href="/login" className="font-medium text-emerald-600 hover:text-emerald-700">
-                Sign in
-              </Link>
-            </p>
-
-            <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              Signing up creates your first workspace automatically. No welcome project is added.
-            </div>
-          </div>
+          }>
+            <SignupForm />
+          </Suspense>
         </div>
-      </div>
     </div>
   );
 }

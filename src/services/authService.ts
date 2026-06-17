@@ -20,7 +20,7 @@ export const login = async (data: Record<string, string>) => {
  * Registers a new user account.
  * Used in: `src/app/(auth)/signup/page.tsx`
  */
-export const register = async (data: Record<string, string>) => {
+export const register = async (data: Record<string, any>) => {
   try {
     const res = await axios.post(`${API_BASE}${AUTH_API_ROUTES.register}`, data);
     return res.data;

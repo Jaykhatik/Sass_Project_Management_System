@@ -10,6 +10,7 @@ export async function POST(request: Request) {
     const name = String(body.name || "").trim();
     const email = String(body.email || "").trim().toLowerCase();
     const password = String(body.password || "");
+    const isInvite = Boolean(body.isInvite);
 
     if (name.length < 2) {
       throw new BadRequestError("Name must be at least 2 characters");
@@ -27,13 +28,43 @@ export async function POST(request: Request) {
     }
 
     const hashedPassword = await hashPassword(password);
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        passwordHash: hashedPassword,
-        emailVerified: false,
-      },
+    
+    // Create the user and their default workspace in a transaction
+    const user = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          name,
+          email,
+          passwordHash: hashedPassword,
+          emailVerified: false,
+        },
+      });
+
+      if (!isInvite) {
+        // Create their default workspace
+        const workspaceName = name ? `${name}'s Workspace` : "My Workspace";
+        // Generate a simple slug
+        const slug = workspaceName.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).substring(2, 6);
+
+        const workspace = await tx.workspace.create({
+          data: {
+            name: workspaceName,
+            slug,
+            ownerId: newUser.id,
+          }
+        });
+
+        // Add them as a member
+        await tx.workspaceMember.create({
+          data: {
+            workspaceId: workspace.id,
+            userId: newUser.id,
+            role: "owner"
+          }
+        });
+      }
+
+      return newUser;
     });
 
     return NextResponse.json(

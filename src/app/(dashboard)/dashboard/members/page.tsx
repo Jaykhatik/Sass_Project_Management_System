@@ -26,6 +26,25 @@ async function getMembers(workspaceId: string) {
   return res.json();
 }
 
+async function getInvites(workspaceId: string) {
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore
+    .getAll()
+    .map(({ name, value }) => `${name}=${value}`)
+    .join('; ');
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/workspaces/${workspaceId}/invites`,
+    {
+      cache: 'no-store',
+      headers: cookieHeader ? { Cookie: cookieHeader } : {},
+    }
+  );
+
+  if (!res.ok) return [];
+  return res.json();
+}
+
 export default async function MembersPage() {
   const user = await getSessionUser();
   if (!user) notFound();
@@ -33,6 +52,8 @@ export default async function MembersPage() {
   if (!workspace) notFound();
   
   const membersData = await getMembers(workspace.id);
+  const invites = await getInvites(workspace.id);
+  
   // The API returns { members: [...] } so we extract the array
   const members = membersData.members || membersData;
   
@@ -43,9 +64,7 @@ export default async function MembersPage() {
         <p className="text-sm text-muted-foreground mt-1">Manage who has access to this workspace and their roles.</p>
       </div>
       
-      <div className="border rounded-xl bg-card shadow-sm overflow-hidden">
-        <MemberList initialMembers={members} workspaceId={workspace.id} />
-      </div>
+      <MemberList initialMembers={members} initialInvites={invites} workspaceId={workspace.id} currentUserId={user.id} />
     </div>
   );
 }

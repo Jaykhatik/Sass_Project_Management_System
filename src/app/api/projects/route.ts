@@ -139,10 +139,12 @@ export async function POST(request: Request) {
       },
     });
 
-    if (!membership && !ownedWorkspace) {
+    const isOwner = ownedWorkspace !== null || membership?.role === "owner";
+
+    if (!isOwner) {
       return NextResponse.json(
         {
-          error: "You do not have access to this workspace",
+          error: "Only the workspace owner can create new projects.",
           code: "FORBIDDEN",
         },
         { status: 403 },

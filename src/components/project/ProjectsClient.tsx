@@ -37,6 +37,7 @@ interface Project {
 interface Props {
   projects: Project[];
   workspaceId: string;
+  isOwner?: boolean;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -45,7 +46,7 @@ const STATUS_STYLES: Record<string, string> = {
   completed: "bg-blue-500/10 text-blue-600 border-blue-500/20",
 };
 
-export function ProjectsClient({ projects, workspaceId }: Props) {
+export function ProjectsClient({ projects, workspaceId, isOwner = false }: Props) {
   const [showDialog, setShowDialog] = useState(false);
   const router = useRouter();
 
@@ -60,13 +61,15 @@ export function ProjectsClient({ projects, workspaceId }: Props) {
             workspace
           </p>
         </div>
-        <button
-          onClick={() => setShowDialog(true)}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          New Project
-        </button>
+        {isOwner && (
+          <button
+            onClick={() => setShowDialog(true)}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            New Project
+          </button>
+        )}
       </div>
 
       {/* Projects Grid */}
@@ -81,13 +84,17 @@ export function ProjectsClient({ projects, workspaceId }: Props) {
               Create your first project to get started.
             </p>
           </div>
-          <button
-            onClick={() => setShowDialog(true)}
-            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            New Project
-          </button>
+          {isOwner ? (
+            <button
+              onClick={() => setShowDialog(true)}
+              className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              New Project
+            </button>
+          ) : (
+            <p className="text-sm text-muted-foreground mt-4">Only the workspace owner can create projects.</p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">

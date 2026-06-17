@@ -226,7 +226,7 @@ export const requireSessionUser = async () => {
 export const getPrimaryWorkspaceForUser = async (userId: string) => {
   const membership = await prisma.workspaceMember.findFirst({
     where: { userId },
-    orderBy: { joinedAt: "asc" },
+    orderBy: { joinedAt: "desc" },
     include: { workspace: true },
   });
 

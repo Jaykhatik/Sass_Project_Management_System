@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUserWithRefresh } from "@/lib/auth";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUserWithRefresh();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { taskId } = await params;
@@ -38,7 +38,7 @@ export async function PATCH(
   { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUserWithRefresh();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { taskId } = await params;
@@ -51,8 +51,30 @@ export async function PATCH(
     const membership = await prisma.workspaceMember.findUnique({
       where: { workspaceId_userId: { workspaceId, userId: user.id } },
     });
-    if (!membership && workspaceId !== (await prisma.workspace.findUnique({ where: { id: workspaceId } }))?.ownerId) {
+    
+    const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+    const isOwner = workspace?.ownerId === user.id;
+    const isAdmin = membership?.role === "admin" || isOwner;
+
+    if (!membership && !isOwner) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Authorization: User must be an Admin/Owner, the task creator, or assigned to the task
+    const existingTask = await prisma.task.findUnique({
+      where: { id: taskId },
+      include: { assignees: true }
+    });
+
+    if (!existingTask) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    }
+
+    const isAssignee = existingTask.assignees.some((a: any) => a.userId === user.id);
+    const isCreator = existingTask.createdById === user.id;
+
+    if (!isAdmin && !isAssignee && !isCreator) {
+      return NextResponse.json({ error: "Only assignees or admins can update this task" }, { status: 403 });
     }
 
     // If assigneeIds is provided, we delete existing assignees and recreate them
@@ -96,11 +118,11 @@ export async function PATCH(
         if (boardColumns.length > 0) {
           let targetCol = boardColumns[0];
           if (status === "done" || status === "completed") {
-            targetCol = boardColumns[boardColumns.length - 1];
+            targetCol = boardColumns.find(c => c.isDoneCol || c.name.toLowerCase().includes("done") || c.name.toLowerCase().includes("complete")) || boardColumns[boardColumns.length - 1];
           } else if (status === "in_progress") {
             targetCol = boardColumns.find(c => c.name.toLowerCase().includes("progress")) || boardColumns[1] || boardColumns[0];
           } else if (status === "in_review") {
-            targetCol = boardColumns.find(c => c.name.toLowerCase().includes("review")) || boardColumns[boardColumns.length - 2] || boardColumns[0];
+            targetCol = boardColumns.find(c => c.name.toLowerCase().includes("review") || c.name.toLowerCase().includes("qa")) || boardColumns[boardColumns.length - 2] || boardColumns[0];
           }
           finalColumnId = targetCol.id;
         }
@@ -142,7 +164,7 @@ export async function DELETE(
   { params }: { params: Promise<{ taskId: string }> }
 ) {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUserWithRefresh();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { taskId } = await params;

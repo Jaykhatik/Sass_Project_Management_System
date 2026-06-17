@@ -43,24 +43,9 @@ export async function POST(request: Request) {
         data: { emailVerified: true },
       });
       user.emailVerified = true;
-
-      // Create initial workspace
-      const baseSlug = slugify(user.name || "workspace");
-      const slug = `${baseSlug}-${user.id.slice(0, 6)}`;
-
-      workspace = await prisma.workspace.create({
-        data: {
-          name: `${user.name || 'User'}'s Workspace`,
-          slug,
-          ownerId: user.id,
-          members: {
-            create: [{ userId: user.id, role: "owner" }],
-          },
-        },
-      });
-    } else {
-      workspace = await getPrimaryWorkspaceForUser(user.id);
     }
+    
+    workspace = await getPrimaryWorkspaceForUser(user.id);
 
     const deviceInfo = request.headers.get("user-agent") || undefined;
     const ipAddress = request.headers.get("x-forwarded-for") || undefined;
@@ -74,7 +59,7 @@ export async function POST(request: Request) {
 
     const responsePayload: any = {
       message: isFirstLogin 
-        ? "Login successful. Email verified and initial workspace created." 
+        ? "Login successful. Email verified." 
         : "Login successful.",
       authenticated: true,
       user: { 

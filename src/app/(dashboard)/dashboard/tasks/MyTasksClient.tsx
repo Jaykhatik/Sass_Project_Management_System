@@ -195,8 +195,8 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
       }
       await fetchTasks();
       setSelectedTasks(new Set());
-    } catch (error) {
-      console.error("Bulk action failed", error);
+    } catch (error: any) {
+      alert(error.message || "Bulk action failed. You might not have permission to modify some of these tasks.");
     } finally {
       setBulkActionLoading(false);
     }
@@ -259,6 +259,7 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
             { value: "all", label: "All Statuses" },
             { value: "todo", label: "To Do" },
             { value: "in_progress", label: "In Progress" },
+            { value: "in_review", label: "In Review" },
             { value: "done", label: "Done" },
           ]}
           className="w-full md:w-48"
@@ -295,6 +296,7 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
                 { value: "", label: "Change Status...", disabled: true },
                 { value: "todo", label: "To Do" },
                 { value: "in_progress", label: "In Progress" },
+                { value: "in_review", label: "In Review" },
                 { value: "done", label: "Done" },
               ]}
               className="w-full sm:w-48 flex-1 sm:flex-none"

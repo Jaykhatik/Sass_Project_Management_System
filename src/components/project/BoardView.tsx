@@ -6,7 +6,6 @@ import { Plus, MoreHorizontal } from "lucide-react";
 import { TaskCard } from "@/components/task/TaskCard";
 import { CreateTaskDialog } from "@/components/task/CreateTaskDialog";
 import { TaskModal } from "@/components/task/TaskModal";
-import { CreateColumnDialog } from "@/components/project/CreateColumnDialog";
 import { reorderTasks, updateTask } from "@/services/taskService";
 import { Column, Task } from "@/types";
 import { cn } from "@/lib/utils";
@@ -31,7 +30,6 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
   const router = useRouter();
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const [creatingInCol, setCreatingInCol] = useState<string | null>(null);
-  const [isCreatingColumn, setIsCreatingColumn] = useState(false);
   const [activeTask, setActiveTask] = useState<string | null>(null);
 
   useEffect(() => {
@@ -48,6 +46,8 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
     const sourceColumnId = e.dataTransfer.getData("sourceColumnId");
 
     if (!taskId || sourceColumnId === targetColumnId) return;
+
+    const previousColumns = [...columns];
 
     // Optimistic UI update
     setColumns((prev) => {
@@ -95,25 +95,15 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
         status: newStatus,
       });
       router.refresh();
-    } catch (err) {
-      console.error(err);
-      // Revert could be handled here
+    } catch (err: any) {
+      alert(err.message || "Failed to move task. You might not have permission.");
+      setColumns(previousColumns);
     }
   };
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex justify-end px-1">
-        <button 
-          onClick={() => setIsCreatingColumn(true)}
-          className="flex my-4 items-center justify-center gap-2 px-5 py-3 rounded-xl border-2 border-dashed border-border/60 bg-muted/20 text-sm font-bold text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 shadow-sm group"
-        >
-          <Plus className="w-4 h-4 transition-transform group-hover:scale-125" />
-          Add Section
-        </button>
-      </div>
-      
-      <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-8 pt-2 min-h-[calc(100vh-320px)] items-start snap-x snap-mandatory sm:snap-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] transition-colors">
+      <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-8 pt-2 min-h-[calc(100vh-320px)] items-start snap-x snap-mandatory sm:snap-none [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 [&::-webkit-scrollbar-track]:bg-transparent transition-colors">
       {columns.map((col, idx) => {
         const colorClass = COL_HEADER_COLORS[idx % COL_HEADER_COLORS.length];
         const atLimit = col.taskLimit ? col.tasks.length >= col.taskLimit : false;
@@ -188,19 +178,6 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
           onClose={() => setCreatingInCol(null)}
           onCreated={(task) => {
             setColumns(columns.map(c => c.id === creatingInCol ? { ...c, tasks: [...c.tasks, task] } : c));
-            router.refresh();
-          }}
-        />
-      )}
-
-      {isCreatingColumn && (
-        <CreateColumnDialog
-          workspaceId={workspaceId}
-          boardId={boardId}
-          onClose={() => setIsCreatingColumn(false)}
-          onCreated={(newCol) => {
-            setColumns([...columns, newCol]);
-            setIsCreatingColumn(false);
             router.refresh();
           }}
         />

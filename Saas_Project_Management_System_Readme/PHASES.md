@@ -16,13 +16,14 @@ Authentication is intentionally last so the core product works and is testable b
 | 5 | Projects & Boards | Container before the items inside |
 | 6 | Tasks — Core | The heart of the product |
 | 7 | Tasks — Advanced | Enrich tasks after basics work |
-| 8 | Sprints & Backlog | Planning layer on top of tasks |
-| 9 | Comments & Activity | Collaboration layer |
-| 10 | File Attachments | Storage integration |
-| 11 | Notifications | Cross-cutting concern, needs tasks + comments first |
-| 12 | Dashboard & Analytics | Aggregates data that now exists |
-| 13 | Billing & Plans | Monetization after product is complete |
-| 14 | Authentication & Auth Guards | Wire up auth last, swap hardcoded user |
+| 8 | Team Invitations & Onboarding | Secure invite links to grow the workspace |
+| 9 | Sprints & Backlog | Planning layer on top of tasks |
+| 10 | Comments & Activity | Collaboration layer |
+| 11 | File Attachments | Storage integration |
+| 12 | Notifications | Cross-cutting concern, needs tasks + comments first |
+| 13 | Dashboard & Analytics | Aggregates data that now exists |
+| 14 | Billing & Plans | Monetization after product is complete |
+| 15 | Authentication & Auth Guards | Wire up auth last, swap hardcoded user |
 
 ---
 
