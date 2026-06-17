@@ -142,6 +142,7 @@ export async function PATCH(
         ...(actualHours !== undefined && { actualHours }),
         ...(storyPoints !== undefined && { storyPoints }),
         ...(parentTaskId !== undefined && { parentTaskId }),
+        ...(body.sprintId !== undefined && { sprintId: body.sprintId }),
         ...assigneesUpdate,
         ...labelsUpdate
       },
@@ -180,6 +181,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Delete subtasks first to avoid foreign key constraints
+    await prisma.task.deleteMany({ where: { parentTaskId: taskId } });
     await prisma.task.delete({ where: { id: taskId } });
     return NextResponse.json({ success: true });
   } catch (error) {

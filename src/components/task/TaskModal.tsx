@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Task, Column } from "@/types";
-import { X, Loader2, ListTodo, Tag } from "lucide-react";
+import { X, Loader2, ListTodo, Tag, ShieldAlert } from "lucide-react";
 import { updateTask, deleteTask, getTaskById, getAllTasks, createSubtask, addDependency } from "@/services/taskService";
 import { getAllMembers, getWorkspaceLabels } from "@/services/workspaceService";
 import dynamic from "next/dynamic";
@@ -326,6 +326,22 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
           <div className="pt-4">
             <div className="space-y-2">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Blocked By (Dependencies)</label>
+              
+              {/* Render Existing Dependencies */}
+              <div className="flex flex-col gap-2 mb-2">
+                {task.blockedBy?.map((dep: any) => {
+                  const blockedTask = workspaceTasks.find(t => t.id === dep.blockerTaskId);
+                  return blockedTask ? (
+                    <div key={dep.blockerTaskId} className="flex items-center justify-between bg-red-500/10 text-red-500 border border-red-500/20 px-3 py-2 rounded-lg text-sm font-medium">
+                      <div className="flex items-center gap-2">
+                        <ShieldAlert className="w-4 h-4" />
+                        <span>{blockedTask.title}</span>
+                      </div>
+                    </div>
+                  ) : null;
+                })}
+              </div>
+
               <select
                 className="w-full bg-muted/30 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 ring-primary/50"
                 onChange={async (e) => {
@@ -333,17 +349,25 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
                   if (!dependentTaskId) return;
                   try {
                     await addDependency(taskId, dependentTaskId);
-                    // UI update handled silently
-                  } catch (err) {
-                    console.error("Failed to add dependency", err);
+                    const updatedTask = {
+                      ...task,
+                      blockedBy: [...(task.blockedBy || []), { blockerTaskId: dependentTaskId }]
+                    };
+                    setTask(updatedTask);
+                    onUpdated(updatedTask);
+                  } catch (err: any) {
+                    alert(err.message || "Failed to add dependency");
                   }
                 }}
                 value=""
               >
-                <option value="" disabled>Select a blocking task...</option>
-                {workspaceTasks.filter(t => t.id !== taskId).map(t => (
-                  <option key={t.id} value={t.id}>{t.title}</option>
-                ))}
+                <option value="" disabled>+ Add a blocking task...</option>
+                {workspaceTasks
+                  .filter(t => t.id !== taskId)
+                  .filter(t => !task.blockedBy?.find((dep: any) => dep.blockerTaskId === t.id))
+                  .map(t => (
+                    <option key={t.id} value={t.id}>{t.title}</option>
+                  ))}
               </select>
             </div>
           </div>

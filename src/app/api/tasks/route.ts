@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSessionUserWithRefresh } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   try {
     const user = await getSessionUserWithRefresh();
@@ -93,6 +95,7 @@ export async function GET(request: Request) {
     const workspaceId = searchParams.get("workspaceId");
     const projectId = searchParams.get("projectId");
     const assigneeId = searchParams.get("assigneeId");
+    const sprintId = searchParams.get("sprintId");
     const q = searchParams.get("q");
 
     if (!workspaceId) {
@@ -131,6 +134,14 @@ export async function GET(request: Request) {
         { title: { contains: q, mode: 'insensitive' } },
         { description: { contains: q, mode: 'insensitive' } }
       ];
+    }
+
+    if (sprintId !== null) {
+      if (sprintId === "null") {
+        whereClause.sprintId = null;
+      } else {
+        whereClause.sprintId = sprintId;
+      }
     }
 
     // Fetch tasks

@@ -86,12 +86,23 @@ export const getTaskById = async (taskId: string, workspaceId: string) => {
  * Fetches all tasks, optionally filtering by assignee.
  * Used in: `src/app/(dashboard)/dashboard/tasks/MyTasksClient.tsx`
  */
-export const getAllTasks = async (workspaceId: string, assigneeId?: string) => {
-  const url = assigneeId 
-    ? `${API_BASE}${TASK_API_ROUTES.tasks}?workspaceId=${workspaceId}&assigneeId=${assigneeId}`
-    : `${API_BASE}${TASK_API_ROUTES.tasks}?workspaceId=${workspaceId}`;
+export const getAllTasks = async (
+  workspaceId: string,
+  options?: { assigneeId?: string; projectId?: string; sprintId?: string | null }
+) => {
+  let url = `${API_BASE}${TASK_API_ROUTES.tasks}?workspaceId=${workspaceId}`;
+  if (options?.assigneeId) url += `&assigneeId=${options.assigneeId}`;
+  if (options?.projectId) url += `&projectId=${options.projectId}`;
+  if (options?.sprintId !== undefined) url += `&sprintId=${options.sprintId}`;
+
   try {
-    const res = await axios.get(url);
+    const res = await axios.get(url, {
+      headers: {
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      }
+    });
     return res.data as Task[];
   } catch (error: any) {
     throw new Error("Failed to fetch tasks");
@@ -120,7 +131,7 @@ export const addDependency = async (taskId: string, dependentTaskId: string) => 
     const res = await axios.post(`${API_BASE}${TASK_API_ROUTES.dependencies(taskId)}`, { dependentTaskId });
     return res.data as Task;
   } catch (error: any) {
-    throw new Error("Failed to add dependency");
+    throw new Error(error.response?.data?.error || "Failed to add dependency");
   }
 };
 

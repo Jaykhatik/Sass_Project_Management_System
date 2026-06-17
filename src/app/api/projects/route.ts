@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { AppError } from "@/lib/errors";
 import { getSessionUserWithRefresh } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/projects?workspaceId=xxx — list all projects
 export async function GET(request: Request) {
   try {

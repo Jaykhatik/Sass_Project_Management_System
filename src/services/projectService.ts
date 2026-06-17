@@ -40,7 +40,14 @@ export const getProject = async (workspaceId: string, projectId: string) => {
   try {
     const res = await axios.get(
       `${API_BASE}${PROJECT_API_ROUTES.projectById(projectId)}?workspaceId=${workspaceId}`,
-      { headers }
+      { 
+        headers: {
+          ...headers,
+          "Cache-Control": "no-cache",
+          "Pragma": "no-cache",
+          "Expires": "0"
+        }
+      }
     );
     return res.data;
   } catch (error: any) {

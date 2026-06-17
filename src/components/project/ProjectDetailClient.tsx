@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Kanban, AlignLeft, Settings } from "lucide-react";
 import { BoardView } from "@/components/project/BoardView";
 import { ListView } from "@/components/project/ListView";
+import { BacklogView } from "@/components/project/BacklogView";
 import { ProjectSettings } from "@/components/project/ProjectSettings";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +13,7 @@ import { Project } from "@/types";
 const TABS = [
   { key: "board", label: "Board", icon: Kanban },
   { key: "list", label: "List", icon: AlignLeft },
+  { key: "backlog", label: "Backlog", icon: AlignLeft },
   { key: "settings", label: "Settings", icon: Settings },
 ] as const;
 
@@ -79,6 +81,13 @@ export function ProjectDetailClient({ project }: { project: Project }) {
         )}
         {activeTab === "list" && defaultBoard && (
           <ListView columns={defaultBoard.columns} workspaceId={project.workspaceId} />
+        )}
+        {activeTab === "backlog" && (
+          <BacklogView 
+            workspaceId={project.workspaceId} 
+            projectId={project.project_id} 
+            project={project}
+          />
         )}
         {activeTab === "settings" && <ProjectSettings project={project} />}
       </div>

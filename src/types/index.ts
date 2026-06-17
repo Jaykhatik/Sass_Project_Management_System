@@ -71,6 +71,7 @@ export interface Task {
   priority: string;
   status: string;
   columnId?: string;
+  sprintId?: string | null;
   dueDate: string | null;
   estimatedHours?: number | null;
   actualHours?: number | null;
@@ -79,6 +80,8 @@ export interface Task {
   labels?: Label[];
   subTasks?: Task[];
   blockedBy?: { blockerTaskId: string }[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Assignee {
@@ -96,4 +99,17 @@ export interface Label {
     name: string;
     color: string;
   };
+}
+
+export interface Sprint {
+  id: string;
+  projectId: string;
+  workspaceId: string;
+  name: string;
+  goal?: string | null;
+  status: string; // planned, active, completed
+  startDate?: string | null;
+  endDate?: string | null;
+  createdAt: string;
+  tasks?: Task[];
 }

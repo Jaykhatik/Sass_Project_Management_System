@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { AppError } from "@/lib/errors";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/projects/[projectId]?workspaceId=xxx
 export async function GET(
   request: Request,
@@ -19,6 +21,10 @@ export async function GET(
       );
     }
 
+    const activeSprint = await prisma.sprint.findFirst({
+      where: { projectId, status: "active" }
+    });
+
     const project = await prisma.project.findFirst({
       where: { id: projectId, workspaceId },
       include: {
@@ -32,7 +38,10 @@ export async function GET(
               orderBy: { position: "asc" },
               include: {
                 tasks: {
-                  where: { parentTaskId: null },
+                  where: { 
+                    parentTaskId: null,
+                    ...(activeSprint ? { sprintId: activeSprint.id } : { sprintId: null })
+                  },
                   orderBy: { position: "asc" },
                   include: {
                     assignees: { include: { user: { select: { id: true, name: true, avatarUrl: true } } } },

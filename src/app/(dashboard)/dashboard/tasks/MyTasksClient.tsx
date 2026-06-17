@@ -121,7 +121,7 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
     setLoading(true);
     try {
       const data = viewMode === "my_tasks"
-        ? await getAllTasks(workspaceId, userId)
+        ? await getAllTasks(workspaceId, { assigneeId: userId })
         : await getAllTasks(workspaceId);
       
       setTasks(data);
