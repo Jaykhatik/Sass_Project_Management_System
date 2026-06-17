@@ -32,3 +32,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+// Support GET for seamless middleware redirects
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const nextUrl = searchParams.get("next") || "/dashboard";
+
+    const cookieStore = await cookies();
+    const refreshToken = cookieStore.get(authCookieNames.refresh)?.value;
+
+    if (!refreshToken) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    const refreshed = await refreshSession(refreshToken);
+    if (!refreshed) {
+      await clearSessionCookies();
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    await setSessionCookies(
+      refreshed.accessToken,
+      refreshed.refreshToken,
+      refreshed.accessTokenExpiresAt,
+      refreshed.refreshTokenExpiresAt,
+    );
+
+    return NextResponse.redirect(new URL(nextUrl, request.url));
+  } catch (error) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+}

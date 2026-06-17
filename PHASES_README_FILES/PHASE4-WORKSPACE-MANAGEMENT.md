@@ -11,7 +11,7 @@
 - lets users rename the workspace
 - keeps the workspace slug fixed
 
-## Files Involved
+## Files Created & Modified in Phase 4
 
 | File | Purpose |
 |---|---|

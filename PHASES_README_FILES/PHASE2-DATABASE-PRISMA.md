@@ -287,7 +287,7 @@ npx prisma migrate deploy           # Applies pending migrations (no prompt, saf
 
 ---
 
-## ✅ Phase 2 Completion Checklist
+## Files Created & Modified in Phase 2 (Completion Checklist)
 
 - [x] `prisma/schema.prisma` — All 17 models defined
 - [x] `prisma.config.ts` — Database URL and seed command configured

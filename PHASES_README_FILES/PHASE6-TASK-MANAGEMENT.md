@@ -14,7 +14,7 @@
 - Includes a gorgeous UI layout for nesting and managing Sub-Tasks.
 - **Provides a global "My Tasks" page to view, search, and filter all tasks across the workspace.**
 
-## Files Involved (To Be Created/Updated)
+## Files Created & Modified in Phase 6
 
 | File | Purpose |
 |---|---|

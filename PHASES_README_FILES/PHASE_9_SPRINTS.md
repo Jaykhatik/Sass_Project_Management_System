@@ -17,6 +17,9 @@ Instead of dealing with 100 tasks at once, Phase 9 introduces "Sprints" and a "B
 
 **Summary:** Phase 9 is the difference between a basic to-do list app (like Trello) and a professional enterprise management tool (like Jira). It gives teams the ability to plan work in focused, manageable "chunks" (Sprints) rather than drowning in an endless list of tasks!
 
+> [!IMPORTANT]
+> **Role-Based Access Control (RBAC):** For security and structural integrity, **only Workspace Owners** are permitted to create, start, or complete sprints. Regular members can view the backlog and move tasks around the active board, but they cannot manage the sprint lifecycle itself.
+
 ---
 
 ## 2. A Real-World Example (Using Your Tasks)
@@ -40,28 +43,32 @@ Here is exactly how you use Phase 9 with them:
 
 ### Step 1: Navigating to the Project Backlog
 * **Frontend Action:** Click the "Backlog" tab inside a project.
+* **Frontend Trace:** The `BacklogView.tsx` component calls `getSprints` from `src/services/sprintService.ts` and `getAllTasks` from `src/services/taskService.ts`.
 * **Backend Trace:** 
   * Calls `GET /api/projects/[projectId]/sprints`
   * Calls `GET /api/tasks?projectId=X&sprintId=null`
   * **Database:** Prisma fetches sprints, and then fetches tasks where `sprintId: null` (meaning they haven't been assigned to a sprint yet).
 
-### Step 2: Creating a "Planned" Sprint
+### Step 2: Creating a "Planned" Sprint *(Owner Only)*
 * **Frontend Action:** Click the "Create Sprint" button.
+* **Frontend Trace:** Calls `createSprint` from `src/services/sprintService.ts`.
 * **Backend Trace:** 
   * Calls `POST /api/projects/[projectId]/sprints` payload `{ name: "Sprint 1" }`
-  * **Database:** Prisma inserts a new row into the Sprint table. Status defaults to `"planned"`.
+  * **Database:** Prisma checks if the user is the Workspace Owner. If true, it inserts a new row into the Sprint table. Status defaults to `"planned"`. If false, returns a 403 Forbidden.
 
 ### Step 3: Planning the Sprint (Drag & Drop)
 * **Frontend Action:** Drag a task card from the Backlog into the Sprint box.
+* **Frontend Trace:** Calls `updateTask` from `src/services/taskService.ts`.
 * **Backend Trace:** 
   * Calls `PATCH /api/tasks/[taskId]` payload `{ sprintId: "new-sprint-id" }`
   * **Database:** Prisma updates the Task row, replacing `sprintId: null` with the ID of the new sprint.
 
-### Step 4: Starting the Sprint
+### Step 4: Starting the Sprint *(Owner Only)*
 * **Frontend Action:** Click "Start Sprint".
+* **Frontend Trace:** Calls `startSprint` from `src/services/sprintService.ts`.
 * **Backend Trace:** 
   * Calls `PATCH /api/sprints/[sprintId]` payload `{ status: "active", startDate: "today", endDate: "today + 14 days" }`
-  * **Database:** Prisma updates the Sprint row, locking status to `"active"`.
+  * **Database:** Prisma verifies Owner status, then updates the Sprint row, locking status to `"active"`.
 
 ### Step 5: Checking the Kanban Board & Burndown Chart
 * **Frontend Action:** Go to the Board. It dynamically filters tasks based on the active sprint.
@@ -70,11 +77,16 @@ Here is exactly how you use Phase 9 with them:
   * **Database:** Prisma checks if an active sprint exists. If yes, it fetches `tasks: { where: { sprintId: activeSprint.id } }`. If no active sprint exists, it fetches `tasks: { where: { sprintId: null } }`.
   * **Burndown Logic:** Calculates `sprint.startDate` vs `endDate`. Plots "Ideal" burn rate. Sums `storyPoints` of tasks with `status === "done"` to plot the "Actual" burn line.
 
-### Step 6: Completing the Sprint
+### Step 6: Completing the Sprint *(Owner Only)*
 * **Frontend Action:** Click "Complete Sprint".
+* **Frontend Trace:** Calls `completeSprint` from `src/services/sprintService.ts`.
 * **Backend Trace:**
   * Calls `PATCH /api/sprints/[sprintId]` payload `{ status: "completed", incompleteAction: "move_to_backlog" }`
-  * **Database:** Prisma fetches all tasks inside the sprint. Filters out incomplete tasks. Runs `prisma.task.updateMany` setting `sprintId: null` on unfinished tasks. Updates Sprint status to `"completed"`.
+  * **Database:** Prisma verifies Owner status. Then it performs complex logic:
+    * It fetches all tasks inside this sprint.
+    * It filters out the ones that are not "done".
+    * It runs a `prisma.task.updateMany` setting `sprintId: null` on unfinished tasks.
+    * Updates Sprint status to `"completed"`.
 
 ---
 
@@ -139,3 +151,22 @@ You can test the Sprint API directly in Postman using the following endpoints.
   }
   ```
 * **Expected Response:** `200 OK` (Returns the completed sprint object).
+
+---
+
+## 5. Files Created & Modified in Phase 9
+Here is a comprehensive list of all the files that were built or touched to bring the Sprint and Backlog features to life.
+
+### 🖥️ Frontend (UI & Components)
+* **`src/components/project/BacklogView.tsx`** *(New)*: The core page component that renders the giant backlog, the drag-and-drop planned sprints, and the "Create/Start Sprint" buttons.
+* **`src/components/project/BurndownChart.tsx`** *(New)*: The visual line chart that automatically calculates and draws your team's velocity (Ideal vs Actual story points) based on the active sprint's dates.
+* **`src/components/project/ProjectDetailClient.tsx`** *(Modified)*: Added the "Backlog" tab to the project navigation menu so you can switch between the Kanban Board and the Backlog easily.
+
+### 🌐 Services
+* **`src/services/sprintService.ts`** *(New)*: The dedicated Axios functions (`getSprints`, `createSprint`, `startSprint`, `completeSprint`) that the frontend uses to talk to the database securely.
+* **`src/services/api/routes.ts`** *(Modified)*: Added the centralized `SPRINT_API_ROUTES` configurations.
+
+### ⚙️ Backend (API Routes)
+* **`src/app/api/projects/[projectId]/sprints/route.ts`** *(New)*: Handles fetching all sprints for a project and creating brand new "Planned" sprints (with strict Owner-only access control).
+* **`src/app/api/sprints/[sprintId]/route.ts`** *(New)*: Handles updating sprints (starting them, ending them) and automatically pushing unfinished tasks back into the backlog when a sprint completes.
+* **`src/app/api/projects/[projectId]/route.ts`** *(Modified)*: Updated the Kanban Board API so that if a Sprint is "Active", the board filters out everything else and *only* shows tasks that belong to that specific sprint.

@@ -23,7 +23,7 @@ This phase introduces a complete, secure onboarding pipeline for new users, coup
 - **Task Permissions:** Standard members can **only** edit, drag-and-drop, or bulk-update tasks if they are the creator or are explicitly assigned to that task.
 - **Frontend Feedback:** Unauthorized attempts immediately revert the UI and generate a popup alert stating: _"Failed to update task. You might not have permission."_
 
-## Files Involved
+## Files Created & Modified in Phase 8
 
 | File                                                    | Purpose                                                                                          |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |

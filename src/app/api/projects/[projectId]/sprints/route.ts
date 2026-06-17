@@ -71,8 +71,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ pro
       where: { workspaceId_userId: { workspaceId, userId: user.id } },
     });
 
-    if (!member) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!member || member.role !== "owner") {
+      return NextResponse.json({ error: "Only the workspace owner can create sprints" }, { status: 403 });
     }
 
     const sprint = await prisma.sprint.create({

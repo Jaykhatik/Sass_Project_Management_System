@@ -31,3 +31,8 @@ export const TASK_API_ROUTES = {
 export const BOARD_API_ROUTES = {
   columns: (boardId: string) => `/boards/${boardId}/columns`,
 };
+
+export const SPRINT_API_ROUTES = {
+  sprintsByProject: (projectId: string) => `/projects/${projectId}/sprints`,
+  sprintById: (sprintId: string) => `/sprints/${sprintId}`,
+};

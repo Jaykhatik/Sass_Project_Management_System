@@ -14,7 +14,7 @@ Phase 7 upgrades the basic task management system built in Phase 6 into an enter
 - **Axios Refactoring & Service Standardization:** Migrated the entire frontend from raw `fetch()` calls to a clean, centralized `axios`-based service architecture for maximum type-safety and error handling.
 - **Board Section Management:** Introduced dynamic Kanban column creation ("Add Section") complete with glassmorphic modal and real-time state updates.
 
-## Files Involved
+## Files Created & Modified in Phase 7
 
 | File | Purpose |
 | ---- | ------- |

@@ -124,7 +124,7 @@ function SignupForm() {
 export default function SignupPage() {
   return (
     <div className="min-h-screen grid lg:grid-cols-[0.95fr_1.05fr] bg-[#f8fafc]">
-      <div className="hidden lg:flex flex-col justify-between overflow-hidden bg-slate-950 p-12 text-white">
+      <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-slate-950 p-12 text-white">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.35),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.22),_transparent_28%)]" />
         <div className="relative z-10 max-w-xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/75">

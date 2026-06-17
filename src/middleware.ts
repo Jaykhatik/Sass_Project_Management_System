@@ -66,11 +66,22 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  const refresh = request.cookies.get("refresh_token")?.value;
+
   if (!isValidSession && isDashboard) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
+    if (refresh) {
+      // Access expired, but we have a refresh token. Redirect to the refresh API safely.
+      const url = request.nextUrl.clone();
+      url.pathname = "/api/auth/refresh";
+      url.searchParams.set("next", pathname + request.nextUrl.search);
+      return NextResponse.redirect(url);
+    } else {
+      // Both dead. Kick to login.
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("next", pathname + request.nextUrl.search);
+      return NextResponse.redirect(url);
+    }
   }
 
   if (isValidSession && isAuthPage) {

@@ -21,8 +21,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ sp
       where: { workspaceId_userId: { workspaceId, userId: user.id } },
     });
 
-    if (!member || (member.role !== "owner" && member.role !== "admin")) {
-      return NextResponse.json({ error: "Only admins and owners can manage sprints" }, { status: 403 });
+    if (!member || member.role !== "owner") {
+      return NextResponse.json({ error: "Only the workspace owner can manage sprints" }, { status: 403 });
     }
 
     // Handle completeSprint incompleteAction logic
