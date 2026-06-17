@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Loader2, Archive } from "lucide-react";
+import { updateProjectClient, archiveProjectClient } from "@/services/projectClientService";
 
 interface Project {
   project_id: string;
@@ -56,21 +57,12 @@ export function ProjectSettings({ project }: { project: Project }) {
     setSuccess("");
 
     try {
-      const res = await fetch(`/api/projects/${project.project_id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          workspaceId: project.workspaceId,
-          name: name.trim(),
-          description: description.trim() || null,
-          color,
-        }),
+      await updateProjectClient(project.project_id, {
+        workspaceId: project.workspaceId,
+        name: name.trim(),
+        description: description.trim() || null,
+        color,
       });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to update project");
-      }
 
       setSuccess("Project settings saved.");
       router.refresh();
@@ -86,12 +78,7 @@ export function ProjectSettings({ project }: { project: Project }) {
       return;
     setArchiving(true);
     try {
-      await fetch(
-        `/api/projects/${project.project_id}?workspaceId=${project.workspaceId}`,
-        {
-          method: "DELETE",
-        },
-      );
+      await archiveProjectClient(project.project_id, project.workspaceId);
       router.push("/dashboard/projects");
       router.refresh();
     } catch {

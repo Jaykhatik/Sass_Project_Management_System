@@ -83,6 +83,7 @@ import {
 } from "lucide-react";
 import { TaskModal } from "@/components/task/TaskModal";
 import { useSearchParams } from "next/navigation";
+import { getAllTasks, updateTask, deleteTask } from "@/services/taskService";
 
 interface Props {
   workspaceId: string;
@@ -119,21 +120,14 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const url =
-        viewMode === "my_tasks"
-          ? `/api/tasks?workspaceId=${workspaceId}&assigneeId=${userId}`
-          : `/api/tasks?workspaceId=${workspaceId}`;
-
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        setTasks(data);
-      } else {
-        setTasks([]);
-        console.error("Error from API:", await res.text());
-      }
+      const data = viewMode === "my_tasks"
+        ? await getAllTasks(workspaceId, userId)
+        : await getAllTasks(workspaceId);
+      
+      setTasks(data);
     } catch (error) {
       console.error("Failed to fetch tasks", error);
+      setTasks([]);
     } finally {
       setLoading(false);
     }
@@ -191,18 +185,12 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
     try {
       if (action === "delete") {
         for (const id of Array.from(selectedTasks)) {
-          await fetch(`/api/tasks/${id}?workspaceId=${workspaceId}`, {
-            method: "DELETE",
-          });
+          await deleteTask(id, workspaceId);
         }
       } else if (action.startsWith("status:")) {
         const status = action.split(":")[1];
         for (const id of Array.from(selectedTasks)) {
-          await fetch(`/api/tasks/${id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ workspaceId, status }),
-          });
+          await updateTask(id, { workspaceId, status });
         }
       }
       await fetchTasks();

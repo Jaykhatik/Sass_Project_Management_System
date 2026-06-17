@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react";
 import axios from "axios";
+import { refreshSession } from "@/services/authService";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -40,7 +41,7 @@ export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        await axios.post("/api/auth/refresh", {}, { withCredentials: true });
+        await refreshSession();
         console.log("Session silently refreshed.");
       } catch (error) {
         console.error("Failed to refresh session.");

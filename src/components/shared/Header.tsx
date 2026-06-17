@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Search, Bell, Menu, LogOut } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { toggleSidebar } from '@/store/slices/uiSlice';
+import { logout } from '@/services/authService';
 
 export function Header() {
   const dispatch = useDispatch();
@@ -12,10 +13,11 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include",
-    });
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
     router.push("/login");
     router.refresh();
   };

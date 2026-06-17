@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Loader2, FolderKanban } from "lucide-react";
+import { createProject } from "@/services/projectClientService";
 
 interface Props {
   workspaceId: string;
@@ -30,18 +31,7 @@ export function NewProjectDialog({ workspaceId, onClose }: Props) {
     setError("");
 
     try {
-      const res = await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workspaceId, name: name.trim(), description: description.trim(), color }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to create project");
-      }
-
-      const project = await res.json();
+      const project = await createProject({ workspaceId, name: name.trim(), description: description.trim(), color });
       router.refresh();
       router.push(`/dashboard/projects/${project.id}`);
       onClose();

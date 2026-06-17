@@ -6,7 +6,7 @@ import { Plus, MoreHorizontal } from "lucide-react";
 import { TaskCard } from "@/components/task/TaskCard";
 import { CreateTaskDialog } from "@/components/task/CreateTaskDialog";
 import { TaskModal } from "@/components/task/TaskModal";
-import { reorderTasks } from "@/services/taskService";
+import { reorderTasks, updateTask } from "@/services/taskService";
 import { Column, Task } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -87,10 +87,10 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
         else if (name.includes("review")) newStatus = "in_review";
       }
 
-      await fetch(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workspaceId, columnId: targetColumnId, status: newStatus }),
+      await updateTask(taskId, {
+        workspaceId,
+        columnId: targetColumnId,
+        status: newStatus,
       });
       router.refresh();
     } catch (err) {

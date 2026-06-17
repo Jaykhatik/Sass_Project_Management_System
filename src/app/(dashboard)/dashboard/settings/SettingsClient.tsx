@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Tag, Trash2, Plus, Loader2 } from "lucide-react";
+import { getWorkspaceLabels, createWorkspaceLabel } from "@/services/workspaceService";
 
 export function SettingsClient({ workspaceId }: { workspaceId: string }) {
   const [labels, setLabels] = useState<any[]>([]);
@@ -16,9 +17,11 @@ export function SettingsClient({ workspaceId }: { workspaceId: string }) {
   }, []);
 
   const fetchLabels = async () => {
-    const res = await fetch(`/api/workspaces/${workspaceId}/labels`);
-    if (res.ok) {
-      setLabels(await res.json());
+    try {
+      const data = await getWorkspaceLabels(workspaceId);
+      setLabels(data || []);
+    } catch (error) {
+      console.error("Failed to fetch labels", error);
     }
     setLoading(false);
   };
@@ -26,14 +29,15 @@ export function SettingsClient({ workspaceId }: { workspaceId: string }) {
   const createLabel = async () => {
     if (!newLabelName.trim()) return;
     setSaving(true);
-    const res = await fetch(`/api/workspaces/${workspaceId}/labels`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newLabelName, color: newLabelColor })
-    });
-    if (res.ok) {
+    try {
+      await createWorkspaceLabel(workspaceId, { 
+        name: newLabelName, 
+        color: newLabelColor 
+      });
       setNewLabelName("");
-      fetchLabels();
+      await fetchLabels();
+    } catch (error) {
+      console.error("Failed to create label", error);
     }
     setSaving(false);
   };

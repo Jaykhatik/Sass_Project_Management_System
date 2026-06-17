@@ -1,6 +1,8 @@
+import axios from "axios";
 import { cookies } from "next/headers";
 import { PROJECT_API_ROUTES } from "./api/routes";
-import { WORKSPACE_API } from "./api";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
 
 const getAuthHeaders = async (): Promise<Record<string, string>> => {
   const cookieStore = await cookies();
@@ -12,57 +14,77 @@ const getAuthHeaders = async (): Promise<Record<string, string>> => {
   return cookieHeader ? { Cookie: cookieHeader } : {};
 };
 
+/**
+ * Fetches all projects for a given workspace.
+ * Used in: `src/app/(dashboard)/dashboard/projects/page.tsx` (Server Component)
+ */
 export const getProjects = async (workspaceId: string) => {
   const headers = await getAuthHeaders();
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}${PROJECT_API_ROUTES.projects}?workspaceId=${workspaceId}`,
-    {
-      cache: "no-store",
-      headers,
-    },
-  );
-
-  if (!res.ok) {
+  try {
+    const res = await axios.get(
+      `${API_BASE}${PROJECT_API_ROUTES.projects}?workspaceId=${workspaceId}`,
+      { headers }
+    );
+    return res.data;
+  } catch (error: any) {
     throw new Error("Failed to fetch projects");
   }
-
-  return res.json();
 };
 
+/**
+ * Fetches a single project by its ID.
+ * Used in: `src/app/(dashboard)/dashboard/projects/[projectId]/page.tsx` (Server Component)
+ */
 export const getProject = async (workspaceId: string, projectId: string) => {
   const headers = await getAuthHeaders();
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}${PROJECT_API_ROUTES.projectById(projectId)}?workspaceId=${workspaceId}`,
-    {
-      cache: "no-store",
-      headers,
-    },
-  );
-
-  if (!res.ok) {
+  try {
+    const res = await axios.get(
+      `${API_BASE}${PROJECT_API_ROUTES.projectById(projectId)}?workspaceId=${workspaceId}`,
+      { headers }
+    );
+    return res.data;
+  } catch (error: any) {
     throw new Error("Failed to fetch project");
   }
-
-  return res.json();
 };
 
+/**
+ * Updates a project (Server-side context).
+ * Note: Use `projectClientService.ts` for Client Components.
+ */
 export const updateProject = async (
   projectId: string,
   data: Record<string, unknown> & { workspaceId: string },
 ) => {
-  const res = await WORKSPACE_API.patch(
-    PROJECT_API_ROUTES.projectById(projectId),
-    data,
-  );
-  return res.data;
+  const headers = await getAuthHeaders();
+  try {
+    const res = await axios.patch(
+      `${API_BASE}${PROJECT_API_ROUTES.projectById(projectId)}`,
+      data,
+      { headers }
+    );
+    return res.data;
+  } catch (error: any) {
+    throw new Error("Failed to update project");
+  }
 };
 
+/**
+ * Archives a project (Server-side context).
+ * Note: Use `projectClientService.ts` for Client Components.
+ */
 export const archiveProject = async (
   projectId: string,
   workspaceId: string,
 ) => {
-  const res = await WORKSPACE_API.delete(
-    `${PROJECT_API_ROUTES.projectById(projectId)}?workspaceId=${workspaceId}`,
-  );
-  return res.data;
+  const headers = await getAuthHeaders();
+  try {
+    const res = await axios.delete(
+      `${API_BASE}${PROJECT_API_ROUTES.projectById(projectId)}?workspaceId=${workspaceId}`,
+      { headers }
+    );
+    return res.data;
+  } catch (error: any) {
+    throw new Error("Failed to archive project");
+  }
 };

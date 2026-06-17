@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, CheckCircle2, LockKeyhole, Mail } from "lucide-react";
+import { login } from "@/services/authService";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,13 +21,7 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Unable to sign in");
+      await login({ email, password });
       router.push(nextUrl);
       router.refresh();
     } catch (err) {

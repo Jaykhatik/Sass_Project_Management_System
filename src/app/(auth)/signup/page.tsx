@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, Sparkles, UserRound } from "lucide-react";
+import { register } from "@/services/authService";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -18,13 +19,7 @@ export default function SignupPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Unable to create account");
+      const data = await register({ name, email, password });
       router.push(data.redirectTo || `/login?email=${encodeURIComponent(email)}`);
       // Removed router.refresh() because login needs no refresh if it's just client navigation.
     } catch (err) {

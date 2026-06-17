@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { Task, Column } from "@/types";
 import { X, Loader2, ListTodo, Tag } from "lucide-react";
-import { updateTask, deleteTask } from "@/services/taskService";
+import { updateTask, deleteTask, getTaskById, getAllTasks, createSubtask, addDependency } from "@/services/taskService";
+import { getAllMembers, getWorkspaceLabels } from "@/services/workspaceService";
 import dynamic from "next/dynamic";
 
 const MDEditor = dynamic(
@@ -32,10 +33,10 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
 
   useEffect(() => {
     Promise.all([
-      fetch(`/api/tasks/${taskId}?workspaceId=${workspaceId}`).then(res => res.json()),
-      fetch(`/api/workspaces/${workspaceId}/members`).then(res => res.json()),
-      fetch(`/api/workspaces/${workspaceId}/labels`).then(res => res.json()),
-      fetch(`/api/tasks?workspaceId=${workspaceId}`).then(res => res.json())
+      getTaskById(taskId, workspaceId),
+      getAllMembers(workspaceId),
+      getWorkspaceLabels(workspaceId),
+      getAllTasks(workspaceId)
     ]).then(([taskData, membersData, labelsData, tasksData]) => {
       setTask(taskData);
       setMembers(membersData);
@@ -100,25 +101,17 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
       e.preventDefault();
       setSaving(true);
       try {
-        const res = await fetch(`/api/tasks/${taskId}/subtasks`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: newSubTaskTitle.trim(),
-            priority: "none",
-            status: "todo"
-          })
+        const newSubTask = await createSubtask(taskId, {
+          title: newSubTaskTitle.trim(),
+          workspaceId
         });
-        if (res.ok) {
-          const newSubTask = await res.json();
           const updatedTask = {
             ...task!,
             subTasks: [...(task!.subTasks || []), newSubTask]
           };
-          setTask(updatedTask);
-          onUpdated(updatedTask);
-          setNewSubTaskTitle("");
-        }
+        setTask(updatedTask);
+        onUpdated(updatedTask);
+        setNewSubTaskTitle("");
       } catch (error) {
         console.error("Failed to create sub-task", error);
       } finally {
@@ -130,18 +123,11 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
   const toggleSubTask = async (subTaskId: string, currentStatus: string) => {
     const newStatus = currentStatus === "done" ? "todo" : "done";
     try {
-      const res = await fetch(`/api/tasks/${subTaskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workspaceId, status: newStatus })
-      });
-      if (res.ok) {
-        const updatedSubTask = await res.json();
-        const updatedSubTasks = task!.subTasks?.map(st => st.id === subTaskId ? updatedSubTask : st) || [];
+      const updatedSubTask = await updateTask(subTaskId, { workspaceId, status: newStatus });
+      const updatedSubTasks = task!.subTasks?.map(st => st.id === subTaskId ? updatedSubTask : st) || [];
         const updatedTask = { ...task!, subTasks: updatedSubTasks };
-        setTask(updatedTask);
-        onUpdated(updatedTask);
-      }
+      setTask(updatedTask);
+      onUpdated(updatedTask);
     } catch (error) {
       console.error("Failed to toggle sub-task", error);
     }
@@ -244,11 +230,11 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
                     setTask(updatedTask);
                     
                     // Database Save
-                    await fetch(`/api/tasks/${taskId}`, {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ workspaceId, labelIds: newLabelIds })
-                    });
+                    try {
+                      await updateTask(taskId, { workspaceId, labelIds: newLabelIds });
+                    } catch(err) {
+                      console.error("Failed to update task labels", err);
+                    }
                     
                     onUpdated(updatedTask);
                   }
@@ -342,12 +328,12 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
                 onChange={async (e) => {
                   const dependentTaskId = e.target.value;
                   if (!dependentTaskId) return;
-                  await fetch(`/api/tasks/${taskId}/dependencies`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ dependentTaskId })
-                  });
-                  // UI update handled silently
+                  try {
+                    await addDependency(taskId, dependentTaskId, workspaceId);
+                    // UI update handled silently
+                  } catch (err) {
+                    console.error("Failed to add dependency", err);
+                  }
                 }}
                 value=""
               >
