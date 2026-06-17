@@ -7,23 +7,23 @@ Authentication is intentionally last so the core product works and is testable b
 
 ## Quick Overview of All Phases
 
-| Phase | What You Build | Why This Order |
-|---|---|---|
-| 1 | Project Setup & Tooling | Foundation everything else depends on |
-| 2 | Database Schema & Prisma | Data layer before any UI or logic |
-| 3 | Core UI Shell & Layout | Shared layout before feature pages |
-| 4 | Workspace Management | Top-level tenant entity first |
-| 5 | Projects & Boards | Container before the items inside |
-| 6 | Tasks — Core | The heart of the product |
-| 7 | Tasks — Advanced | Enrich tasks after basics work |
-| 8 | Team Invitations & Onboarding | Secure invite links to grow the workspace |
-| 9 | Sprints & Backlog | Planning layer on top of tasks |
-| 10 | Comments & Activity | Collaboration layer |
-| 11 | File Attachments | Storage integration |
-| 12 | Notifications | Cross-cutting concern, needs tasks + comments first |
-| 13 | Dashboard & Analytics | Aggregates data that now exists |
-| 14 | Billing & Plans | Monetization after product is complete |
-| 15 | Authentication & Auth Guards | Wire up auth last, swap hardcoded user |
+| Phase | What You Build                | Why This Order                                      |
+| ----- | ----------------------------- | --------------------------------------------------- |
+| 1     | Project Setup & Tooling       | Foundation everything else depends on               |
+| 2     | Database Schema & Prisma      | Data layer before any UI or logic                   |
+| 3     | Core UI Shell & Layout        | Shared layout before feature pages                  |
+| 4     | Workspace Management          | Top-level tenant entity first                       |
+| 5     | Projects & Boards             | Container before the items inside                   |
+| 6     | Tasks — Core                  | The heart of the product                            |
+| 7     | Tasks — Advanced              | Enrich tasks after basics work                      |
+| 8     | Team Invitations & Onboarding | Secure invite links to grow the workspace           |
+| 9     | Sprints & Backlog             | Planning layer on top of tasks                      |
+| 10    | Comments & Activity           | Collaboration layer                                 |
+| 11    | File Attachments              | Storage integration                                 |
+| 12    | Notifications                 | Cross-cutting concern, needs tasks + comments first |
+| 13    | Dashboard & Analytics         | Aggregates data that now exists                     |
+| 14    | Billing & Plans               | Monetization after product is complete              |
+| 15    | Authentication & Auth Guards  | Wire up auth last, swap hardcoded user              |
 
 ---
 
@@ -34,12 +34,14 @@ Authentication is intentionally last so the core product works and is testable b
 ### Steps
 
 1. Scaffold the project
+
    ```bash
    pnpm create next-app@latest saas-pm --typescript --no-tailwind --app --src-dir
    cd saas-pm
    ```
 
 2. Install core dependencies
+
    ```bash
    pnpm add prisma @prisma/client
    pnpm add @reduxjs/toolkit react-redux
@@ -48,15 +50,18 @@ Authentication is intentionally last so the core product works and is testable b
    ```
 
 3. Set up custom CSS structure
+
    ```
    src/styles/
    ├── globals.css        ← CSS variables, resets, base styles
    ├── variables.css       ← design tokens (colors, spacing, typography)
    └── components/         ← per-component CSS files (optional, or co-located)
    ```
+
    Import `globals.css` and `variables.css` in `src/app/layout.tsx`.
 
 4. Configure path aliases in `tsconfig.json`
+
    ```json
    {
      "compilerOptions": {
@@ -69,6 +74,7 @@ Authentication is intentionally last so the core product works and is testable b
 5. Configure ESLint, Prettier, `.editorconfig`
 
 6. Set up folder structure
+
    ```
    src/
    ├── app/
@@ -87,6 +93,7 @@ Authentication is intentionally last so the core product works and is testable b
 10. Set up Git and commit
 
 ### ✅ Done When
+
 - `pnpm dev` runs without errors
 - Custom CSS (variables, globals) loads correctly across pages
 - TypeScript shows no errors
@@ -100,6 +107,7 @@ Authentication is intentionally last so the core product works and is testable b
 ### Steps
 
 1. Init Prisma
+
    ```bash
    pnpm prisma init
    ```
@@ -118,11 +126,13 @@ Authentication is intentionally last so the core product works and is testable b
 3. Set `DATABASE_URL` in `.env.local`
 
 4. Create and run the initial migration
+
    ```bash
    pnpm prisma migrate dev --name init
    ```
 
 5. Create `src/lib/db.ts` — Prisma singleton
+
    ```typescript
    import { PrismaClient } from "@prisma/client";
    const globalForPrisma = globalThis as { prisma?: PrismaClient };
@@ -136,6 +146,7 @@ Authentication is intentionally last so the core product works and is testable b
    - 2 projects with boards, columns, and sample tasks
 
 7. Run seed
+
    ```bash
    pnpm prisma db seed
    ```
@@ -146,6 +157,7 @@ Authentication is intentionally last so the core product works and is testable b
    ```
 
 ### ✅ Done When
+
 - All tables exist in the DB
 - `prisma.task.findMany()` returns seeded tasks
 - No migration errors
@@ -161,6 +173,7 @@ Authentication is intentionally last so the core product works and is testable b
 ### Steps
 
 1. Create route groups
+
    ```
    src/app/
    ├── (dashboard)/
@@ -192,6 +205,7 @@ Authentication is intentionally last so the core product works and is testable b
 8. Create a global error boundary (`error.tsx`) and loading skeleton (`loading.tsx`)
 
 ### ✅ Done When
+
 - Navigating to `/demo-workspace` shows the app shell
 - Sidebar links navigate between pages
 - Layout renders on mobile
@@ -233,6 +247,7 @@ Authentication is intentionally last so the core product works and is testable b
 6. Add validation for all inputs
 
 ### ✅ Done When
+
 - Member list loads from DB
 - Workspace name can be updated
 - Role changes persist
@@ -286,6 +301,7 @@ Authentication is intentionally last so the core product works and is testable b
    - Danger zone — Archive project
 
 ### ✅ Done When
+
 - ✅ Projects list shows all seeded projects
 - ✅ Board view renders columns and task cards
 - ✅ New project can be created and appears in the list
@@ -310,6 +326,7 @@ Authentication is intentionally last so the core product works and is testable b
 2. Create API routes for tasks
 
 3. Install drag-and-drop library
+
    ```bash
    pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
    ```
@@ -341,6 +358,7 @@ Authentication is intentionally last so the core product works and is testable b
 8. Build task filters component (priority, assignee, label, due date)
 
 ### ✅ Done When
+
 - Tasks can be dragged between columns
 - Task detail panel opens and edits save
 - My Tasks page shows correct tasks
@@ -386,13 +404,42 @@ Authentication is intentionally last so the core product works and is testable b
    - Search bar in header activates search mode
 
 ### ✅ Done When
+
 - Sub-tasks render and their completion affects parent progress
 - Blocked tasks show visually
 - Time can be logged and totals shown
 
 ---
 
-## Phase 8 — Sprints & Backlog
+## Phase 8 — Team Invitations, Security & Role-Based Access Control (RBAC)
+
+**Goal:** Allow workspace owners to generate secure invite links, onboard new members, and enforce strict permissions across the platform.
+
+### Steps
+
+1. Create `WorkspaceInvite` model in Prisma schema
+2. Create invite endpoints (`POST /api/workspaces/:id/invites`, `GET /api/workspaces/:id/invites`)
+3. Create invite acceptance endpoint (`POST /api/invites/:token/accept`)
+4. Build `InviteMemberModal.tsx` for generating cryptographic shareable links
+5. Implement Custom Immutable Roles (roles lock on invite acceptance)
+6. Prevent orphan workspaces when invited users log in for the first time
+7. Enforce Role-Based Access Control (RBAC):
+   - Only the **Owner** can create projects
+   - Only the **Owner** can invite members or change roles
+8. Enforce Task Modification Security:
+   - Only Admins, Owners, task Creators, or Assignees can edit/drag tasks
+   - Implement clean frontend alert popups for `403 Forbidden` errors
+
+### ✅ Done When
+
+- Owner can generate an invite link with a custom role
+- Invited user can register, login, and click "Accept" to join the workspace
+- Members are blocked from creating projects or removing other members
+- Task dragging and updating is secured to authorized users only
+
+---
+
+## Phase 9 — Sprints & Backlog
 
 **Goal:** Sprint planning, backlog management, burndown chart.
 
@@ -427,13 +474,14 @@ Authentication is intentionally last so the core product works and is testable b
 7. Add Sprint tab to project detail page
 
 ### ✅ Done When
+
 - Sprint can be created, started, and completed
 - Backlog tasks can be dragged into sprints
 - Burndown chart renders with real data
 
 ---
 
-## Phase 9 — Comments & Activity
+## Phase 10 — Comments & Activity
 
 **Goal:** Task comments with Markdown, @mentions, and an activity feed.
 
@@ -472,13 +520,14 @@ Authentication is intentionally last so the core product works and is testable b
    - Filter by project or member
 
 ### ✅ Done When
+
 - Comments can be written, edited, deleted
 - Activity log shows task changes
 - Workspace feed shows recent activity
 
 ---
 
-## Phase 10 — File Attachments
+## Phase 11 — File Attachments
 
 **Goal:** Upload and manage files attached to tasks.
 
@@ -507,13 +556,14 @@ Authentication is intentionally last so the core product works and is testable b
 7. Show image previews inline for image attachments
 
 ### ✅ Done When
+
 - Files upload to S3/R2
 - Attachments appear in task detail
 - Files can be downloaded and deleted
 
 ---
 
-## Phase 11 — Notifications
+## Phase 12 — Notifications
 
 **Goal:** In-app notifications for assignments, mentions, comments. No Redis — polling via RTK Query.
 
@@ -539,6 +589,7 @@ Authentication is intentionally last so the core product works and is testable b
    - Click navigates to the relevant task
 
 5. Set up polling with RTK Query
+
    ```typescript
    // src/store/api/notificationsApi.ts
    export const notificationsApi = createApi({
@@ -565,13 +616,14 @@ Authentication is intentionally last so the core product works and is testable b
    - Filter by type
 
 ### ✅ Done When
+
 - Assigning a task creates a notification for the assignee
 - Bell icon shows unread count
 - Notifications update every 30 seconds
 
 ---
 
-## Phase 12 — Dashboard & Analytics
+## Phase 13 — Dashboard & Analytics
 
 **Goal:** A useful homepage with real data — progress, workload, recent activity.
 
@@ -605,19 +657,21 @@ Authentication is intentionally last so the core product works and is testable b
    - Warning section on dashboard
 
 ### ✅ Done When
+
 - Dashboard shows real aggregated data from DB
 - Charts render with Recharts
 - Overdue tasks section is visible
 
 ---
 
-## Phase 13 — Billing & Plans
+## Phase 14 — Billing & Plans
 
 **Goal:** Stripe checkout, plan enforcement, subscription management.
 
 ### Steps
 
 1. Install Stripe
+
    ```bash
    pnpm add stripe @stripe/stripe-js
    ```
@@ -650,6 +704,7 @@ Authentication is intentionally last so the core product works and is testable b
    - When limit hit: modal explaining limit + upgrade CTA
 
 8. Set up Stripe webhook locally
+
    ```bash
    stripe listen --forward-to localhost:3000/api/webhooks/stripe
    ```
@@ -657,13 +712,14 @@ Authentication is intentionally last so the core product works and is testable b
 9. Test all 4 webhook events with Stripe CLI
 
 ### ✅ Done When
+
 - Checkout session creates a Pro subscription
 - Webhook updates `subscriptions` table
 - Plan limits block resource creation at Free tier
 
 ---
 
-## Phase 14 — Authentication (Last)
+## Phase 15 — Authentication (Last)
 
 **Goal:** Replace the hardcoded seed user with real authentication. Add all auth flows and route guards.
 
@@ -672,6 +728,7 @@ Authentication is intentionally last so the core product works and is testable b
 ### Steps
 
 1. Install NextAuth.js
+
    ```bash
    pnpm add next-auth@beta bcryptjs
    pnpm add -D @types/bcryptjs
@@ -732,6 +789,7 @@ Authentication is intentionally last so the core product works and is testable b
 13. Test all auth flows end-to-end
 
 ### ✅ Done When
+
 - Login with email/password creates a real session
 - OAuth login works with Google and/or GitHub
 - All pages redirect to login when unauthenticated
@@ -757,7 +815,7 @@ Authentication is intentionally last so the core product works and is testable b
 ## Summary — The Golden Rule of This Order
 
 ```
-Data  →  Shell  →  Workspaces  →  Projects  →  Tasks  →  Enrichments  →  Sprints
+Data  →  Shell  →  Workspaces  →  Projects  →  Tasks  →  Enrichments  →  Invitations  →  Sprints
 →  Collaboration  →  Files  →  Notifications  →  Dashboard  →  Billing  →  Auth
 ```
 
