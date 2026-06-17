@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, MoreHorizontal } from "lucide-react";
 import { TaskCard } from "@/components/task/TaskCard";
 import { CreateTaskDialog } from "@/components/task/CreateTaskDialog";
@@ -17,18 +18,23 @@ interface Props {
 }
 
 const COL_HEADER_COLORS: string[] = [
-  "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
-  "bg-amber-500/10 text-amber-600 border-amber-500/20",
-  "bg-purple-500/10 text-purple-600 border-purple-500/20",
-  "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  "bg-rose-500/10 text-rose-600 border-rose-500/20",
-  "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
+  "bg-indigo-500/10 text-indigo-600 border-indigo-500/20 shadow-sm",
+  "bg-amber-500/10 text-amber-600 border-amber-500/20 shadow-sm",
+  "bg-purple-500/10 text-purple-600 border-purple-500/20 shadow-sm",
+  "bg-emerald-500/10 text-emerald-600 border-emerald-500/20 shadow-sm",
+  "bg-rose-500/10 text-rose-600 border-rose-500/20 shadow-sm",
+  "bg-cyan-500/10 text-cyan-600 border-cyan-500/20 shadow-sm",
 ];
 
 export function BoardView({ columns: initialColumns, workspaceId, projectId, boardId }: Props) {
+  const router = useRouter();
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const [creatingInCol, setCreatingInCol] = useState<string | null>(null);
   const [activeTask, setActiveTask] = useState<string | null>(null);
+
+  useEffect(() => {
+    setColumns(initialColumns);
+  }, [initialColumns]);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -54,23 +60,39 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
 
       const [task] = newCols[srcColIndex].tasks.splice(taskIndex, 1);
       
-      // Update task column
+      // Update task column and dynamically map status
       const updatedTask = { ...task };
-      // Note: we'd ideally set columnId on task if we maintained it, but we can just push it
+      const targetColDef = newCols[destColIndex];
+      let newStatus = "todo";
+      if (targetColDef) {
+        const name = targetColDef.name.toLowerCase();
+        if (name.includes("done") || name.includes("complete")) newStatus = "done";
+        else if (name.includes("progress")) newStatus = "in_progress";
+        else if (name.includes("review")) newStatus = "in_review";
+      }
+      updatedTask.status = newStatus;
+      
       newCols[destColIndex].tasks.push(updatedTask);
       
       return newCols;
     });
 
     try {
-      // Find the task's boardId (we can pass boardId from props or context ideally)
-      // Since reorder API expects boardId, and we need position, we simplify here:
+      const targetColDef = columns.find(c => c.id === targetColumnId);
+      let newStatus = "todo";
+      if (targetColDef) {
+        const name = targetColDef.name.toLowerCase();
+        if (name.includes("done") || name.includes("complete")) newStatus = "done";
+        else if (name.includes("progress")) newStatus = "in_progress";
+        else if (name.includes("review")) newStatus = "in_review";
+      }
+
       await fetch(`/api/tasks/${taskId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ workspaceId, columnId: targetColumnId }),
+        body: JSON.stringify({ workspaceId, columnId: targetColumnId, status: newStatus }),
       });
-      // We are just patching the columnId for now, a full reorder API with position logic would go here
+      router.refresh();
     } catch (err) {
       console.error(err);
       // Revert could be handled here
@@ -78,7 +100,15 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
   };
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4 min-h-[calc(100vh-280px)] items-start">
+    <div className="flex flex-col gap-2">
+      <div className="flex justify-end px-1">
+        <button className="flex my-4 items-center justify-center gap-2 px-5 py-3 rounded-xl border-2 border-dashed border-border/60 bg-muted/20 text-sm font-bold text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 shadow-sm group">
+          <Plus className="w-4 h-4 transition-transform group-hover:scale-125" />
+          Add Section
+        </button>
+      </div>
+      
+      <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-8 pt-2 min-h-[calc(100vh-320px)] items-start snap-x snap-mandatory sm:snap-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] transition-colors">
       {columns.map((col, idx) => {
         const colorClass = COL_HEADER_COLORS[idx % COL_HEADER_COLORS.length];
         const atLimit = col.taskLimit ? col.tasks.length >= col.taskLimit : false;
@@ -86,16 +116,16 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
         return (
           <div
             key={col.id}
-            className="flex-shrink-0 w-72 flex flex-col gap-2"
+            className="flex-shrink-0 flex-1 min-w-[250px] max-w-[320px] flex flex-col gap-3 snap-center"
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, col.id)}
           >
             {/* Column Header */}
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between px-2 py-1">
+              <div className="flex items-center gap-2.5">
                 <span
                   className={cn(
-                    "text-xs font-semibold px-2.5 py-0.5 rounded-full border",
+                    "text-[11px] uppercase tracking-widest font-extrabold px-3 py-1 rounded-lg border",
                     colorClass
                   )}
                 >
@@ -103,21 +133,21 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
                 </span>
                 <span
                   className={cn(
-                    "text-xs text-muted-foreground font-medium",
-                    atLimit && "text-destructive font-semibold"
+                    "text-xs font-bold bg-muted/60 text-muted-foreground px-2 py-0.5 rounded-md border border-border/50 shadow-sm",
+                    atLimit && "bg-destructive/10 text-destructive border-destructive/20"
                   )}
                 >
                   {col.tasks.length}
-                  {col.taskLimit ? `/${col.taskLimit}` : ""}
+                  {col.taskLimit ? ` / ${col.taskLimit}` : ""}
                 </span>
               </div>
-              <button className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+              <button className="p-1.5 rounded-md hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors border border-transparent hover:border-border/50">
                 <MoreHorizontal className="w-4 h-4" />
               </button>
             </div>
 
             {/* Tasks container */}
-            <div className="bg-muted/40 rounded-xl p-2 space-y-2 min-h-[120px]">
+            <div className="bg-card/40 backdrop-blur-xl border border-border/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl p-2.5 space-y-3 min-h-[150px] flex flex-col transition-all">
               {col.tasks.map((task) => (
                 <TaskCard 
                   key={task.id} 
@@ -129,22 +159,15 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
               <button
                 onClick={() => setCreatingInCol(col.id)}
                 disabled={atLimit}
-                className="w-full flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-md px-2 py-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center gap-2 text-xs font-bold text-muted-foreground hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/20 rounded-xl px-2 py-2.5 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed mt-2"
               >
-                <Plus className="w-3.5 h-3.5" />
-                Add task
+                <Plus className="w-4 h-4" />
+                Add Task
               </button>
             </div>
           </div>
         );
       })}
-
-      {/* Add Column Button */}
-      <div className="flex-shrink-0 w-72">
-        <button className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-dashed border-border/50 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-all">
-          <Plus className="w-4 h-4" />
-          Add Section
-        </button>
       </div>
 
       {/* Modals */}
@@ -157,6 +180,7 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
           onClose={() => setCreatingInCol(null)}
           onCreated={(task) => {
             setColumns(columns.map(c => c.id === creatingInCol ? { ...c, tasks: [...c.tasks, task] } : c));
+            router.refresh();
           }}
         />
       )}
@@ -171,12 +195,14 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
               ...c,
               tasks: c.tasks.map(t => t.id === updated.id ? updated : t)
             })));
+            router.refresh();
           }}
           onDeleted={(id) => {
             setColumns(columns.map(c => ({
               ...c,
               tasks: c.tasks.filter(t => t.id !== id)
             })));
+            router.refresh();
           }}
         />
       )}

@@ -74,14 +74,25 @@ export function TaskCard({ task, onClick }: Props) {
               <span>{new Date(task.dueDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
             </div>
           )}
-          {task.subTasks && task.subTasks.length > 0 && (
-            <div className="flex items-center gap-1 text-muted-foreground ml-1" title={`${task.subTasks.filter((st:any) => st.status === 'done').length} of ${task.subTasks.length} sub-tasks completed`}>
-              <CheckSquare className="w-3 h-3" />
-              <span>
-                {task.subTasks.filter((st:any) => st.status === 'done').length}/{task.subTasks.length}
-              </span>
-            </div>
-          )}
+          {task.subTasks && task.subTasks.length > 0 && (() => {
+            const completedCount = task.subTasks.filter((st:any) => st.status === 'done').length;
+            const totalCount = task.subTasks.length;
+            const allDone = completedCount === totalCount;
+            return (
+              <div 
+                className={cn(
+                  "flex items-center gap-1 ml-1 transition-colors",
+                  allDone ? "text-emerald-500 font-medium" : "text-muted-foreground"
+                )} 
+                title={`${completedCount} of ${totalCount} sub-tasks completed`}
+              >
+                <CheckSquare className="w-3 h-3" />
+                <span>
+                  {completedCount}/{totalCount}
+                </span>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Assignees */}

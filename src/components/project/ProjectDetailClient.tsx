@@ -78,7 +78,7 @@ export function ProjectDetailClient({ project }: { project: Project }) {
           </p>
         )}
         {activeTab === "list" && defaultBoard && (
-          <ListView columns={defaultBoard.columns} />
+          <ListView columns={defaultBoard.columns} workspaceId={project.workspaceId} />
         )}
         {activeTab === "settings" && <ProjectSettings project={project} />}
       </div>

@@ -1,13 +1,16 @@
 "use client";
 
-import React from "react";
-import { AlertCircle, ArrowUp, Minus, ArrowDown, Clock, User, CheckCircle2, ShieldAlert } from "lucide-react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { AlertCircle, ArrowUp, Minus, ArrowDown, Clock, User, CheckSquare, ShieldAlert } from "lucide-react";
+import { TaskModal } from "@/components/task/TaskModal";
 import { cn } from "@/lib/utils";
 
 import { Column } from "@/types";
 
 interface Props {
   columns: Column[];
+  workspaceId: string;
 }
 
 const PRIORITY_ICON: Record<string, React.ReactNode> = {
@@ -19,13 +22,15 @@ const PRIORITY_ICON: Record<string, React.ReactNode> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  todo: "bg-slate-100 text-slate-600",
-  in_progress: "bg-blue-100 text-blue-700",
-  in_review: "bg-amber-100 text-amber-700",
-  done: "bg-emerald-100 text-emerald-700",
+  todo: "bg-slate-500/10 text-slate-600 border-slate-500/20",
+  in_progress: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  in_review: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  done: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
 };
 
-export function ListView({ columns }: Props) {
+export function ListView({ columns, workspaceId }: Props) {
+  const router = useRouter();
+  const [activeTask, setActiveTask] = useState<string | null>(null);
   const allTasks = columns.flatMap((col) =>
     col.tasks.map((task) => ({ ...task, columnName: col.name }))
   );
@@ -40,43 +45,46 @@ export function ListView({ columns }: Props) {
   }
 
   return (
-    <div className="border rounded-xl overflow-hidden bg-card shadow-sm">
-      {/* Table Header */}
-      <div className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 px-4 py-2.5 bg-muted/50 border-b text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        <span>Task</span>
-        <span className="w-24 text-center">Status</span>
-        <span className="w-20 text-center">Priority</span>
-        <span className="w-32 text-center">Metrics</span>
-        <span className="w-28 text-center">Assignee</span>
-        <span className="w-24 text-center">Due Date</span>
-      </div>
+    <>
+      <div className="border border-border/50 rounded-3xl overflow-hidden bg-card/40 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+      <div className="overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 [&::-webkit-scrollbar-track]:bg-transparent">
+        <div className="min-w-[900px]">
+          {/* Table Header */}
+          <div className="grid grid-cols-[1fr_120px_100px_140px_120px_120px] gap-4 px-6 py-3.5 bg-muted/40 border-b border-border/50 text-[11px] font-extrabold text-muted-foreground uppercase tracking-widest">
+            <span>Task</span>
+            <span className="text-center">Status</span>
+            <span className="text-center">Priority</span>
+            <span className="text-center">Metrics</span>
+            <span className="text-center">Assignee</span>
+            <span className="text-center">Due Date</span>
+          </div>
 
       {/* Rows */}
-      <div className="divide-y">
+      <div className="divide-y divide-border/40">
         {allTasks.map((task) => {
           const overdue = task.dueDate && new Date(task.dueDate) < new Date();
 
           return (
             <div
               key={task.id}
-              className="grid grid-cols-[1fr_auto_auto_auto_auto_auto] gap-4 items-center px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer"
+              onClick={() => setActiveTask(task.id)}
+              className="grid grid-cols-[1fr_120px_100px_140px_120px_120px] gap-4 items-center px-6 py-4 hover:bg-muted/40 transition-all duration-300 cursor-pointer group relative overflow-hidden before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-primary before:-translate-x-full group-hover:before:translate-x-0 before:transition-transform before:duration-300 before:ease-out before:rounded-r-full"
             >
               {/* Title + Labels */}
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium truncate">{task.title}</p>
+              <div className="min-w-0 pr-4">
+                <div className="flex items-center gap-2.5">
+                  <p className="text-sm font-bold truncate group-hover:text-primary transition-colors">{task.title}</p>
                   {task.blockedBy && task.blockedBy.length > 0 && (
-                    <span title="Blocked by another task" className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white shadow-sm bg-red-600 flex items-center gap-1 shrink-0">
+                    <span title="Blocked by another task" className="text-[10px] font-bold px-1.5 py-0.5 rounded-md text-white shadow-sm bg-red-600 flex items-center gap-1 shrink-0 uppercase tracking-widest">
                       <ShieldAlert className="w-3 h-3" /> Blocked
                     </span>
                   )}
                 </div>
-                <div className="flex gap-1 mt-0.5 flex-wrap">
-                  <span className="text-xs text-muted-foreground">{task.columnName}</span>
+                <div className="flex gap-1.5 mt-1.5 flex-wrap items-center">
                   {task.labels?.map(({ label }) => (
                     <span
                       key={label.id}
-                      className="text-xs px-1.5 rounded-full"
+                      className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border"
                       style={{
                         backgroundColor: `${label.color}20`,
                         color: label.color,
@@ -87,31 +95,37 @@ export function ListView({ columns }: Props) {
                   ))}
                 </div>
                 
-                {/* Render Sub-tasks */}
-                {task.subTasks && task.subTasks.length > 0 && (
-                  <div className="mt-2.5 flex flex-col gap-1 ml-1 border-l-2 border-muted pl-2.5">
-                    {task.subTasks.map((st: any) => (
-                      <div key={st.id} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        {st.status === 'done' ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" />
-                        ) : (
-                          <div className="w-3 h-3 rounded-sm border border-muted-foreground/40 shrink-0 ml-[1px]" />
+                {/* Render Sub-tasks Summary */}
+                {task.subTasks && task.subTasks.length > 0 && (() => {
+                  const completedCount = task.subTasks.filter((st:any) => st.status === 'done').length;
+                  const totalCount = task.subTasks.length;
+                  const allDone = completedCount === totalCount;
+                  
+                  return (
+                    <div className="mt-2.5">
+                      <span 
+                        title={`${completedCount} of ${totalCount} sub-tasks completed`}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded border shadow-sm transition-colors",
+                          allDone 
+                            ? "text-emerald-600 bg-emerald-500/10 border-emerald-500/30" 
+                            : "text-muted-foreground bg-muted/60 border-border/50"
                         )}
-                        <span className={st.status === 'done' ? 'line-through opacity-70 truncate' : 'truncate'}>
-                          {st.title}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      >
+                        <CheckSquare className={cn("w-3 h-3", allDone ? "opacity-100" : "opacity-70")} />
+                        {completedCount}/{totalCount}
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Status */}
-              <div className="w-24 text-center">
+              <div className="flex justify-center">
                 <span
                   className={cn(
-                    "text-xs px-2 py-0.5 rounded-full font-medium capitalize",
-                    STATUS_STYLES[task.status] ?? "bg-slate-100 text-slate-600"
+                    "text-[10px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-lg border shadow-sm",
+                    STATUS_STYLES[task.status] ?? "bg-slate-500/10 text-slate-600 border-slate-500/20"
                   )}
                 >
                   {task.status.replace("_", " ")}
@@ -119,41 +133,41 @@ export function ListView({ columns }: Props) {
               </div>
 
               {/* Priority */}
-              <div className="w-20 flex justify-center items-center gap-1">
+              <div className="flex justify-center items-center gap-1.5">
                 {PRIORITY_ICON[task.priority] ?? PRIORITY_ICON.none}
-                <span className="text-xs text-muted-foreground capitalize">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                   {task.priority}
                 </span>
               </div>
 
               {/* Metrics (Story Points & Hours) */}
-              <div className="w-32 flex flex-col items-center justify-center gap-1">
+              <div className="flex flex-col items-center justify-center gap-1.5">
                 {task.storyPoints != null && (
-                  <span title="Story Points" className="text-[10px] flex items-center gap-1 font-mono bg-muted/50 px-2 py-0.5 rounded text-muted-foreground w-full justify-center">
+                  <span title="Story Points" className="text-[10px] font-bold flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-lg border border-border/50 text-muted-foreground w-[80%] justify-center shadow-sm">
                     ⭐ {task.storyPoints}
                   </span>
                 )}
                 {(task.estimatedHours != null || task.actualHours != null) && (
-                  <span title="Hours (Actual / Estimated)" className="text-[10px] flex items-center gap-1 font-mono bg-muted/50 px-2 py-0.5 rounded text-muted-foreground w-full justify-center">
+                  <span title="Hours (Actual / Estimated)" className="text-[10px] font-bold flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-lg border border-border/50 text-muted-foreground w-[80%] justify-center shadow-sm">
                     ⏱️ {task.actualHours || 0} / {task.estimatedHours || 0}h
                   </span>
                 )}
                 {task.storyPoints == null && task.estimatedHours == null && task.actualHours == null && (
-                  <span className="text-xs text-muted-foreground">—</span>
+                  <span className="text-xs font-bold text-muted-foreground opacity-50">—</span>
                 )}
               </div>
 
               {/* Assignees */}
-              <div className="w-28 flex justify-center">
+              <div className="flex justify-center">
                 {!task.assignees || task.assignees.length === 0 ? (
-                  <span className="text-xs text-muted-foreground">—</span>
+                  <span className="text-xs font-bold text-muted-foreground opacity-50">—</span>
                 ) : (
-                  <div className="flex -space-x-1.5">
+                  <div className="flex -space-x-2">
                     {task.assignees.slice(0, 3).map(({ user }) => (
                       <div
                         key={user.id}
                         title={user.name ?? "Unknown"}
-                        className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 border-2 border-card flex items-center justify-center text-white text-[9px] font-bold"
+                        className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border-2 border-background flex items-center justify-center text-white text-[10px] font-bold shadow-sm"
                       >
                         {(user.name ?? "U").charAt(0).toUpperCase()}
                       </div>
@@ -163,28 +177,42 @@ export function ListView({ columns }: Props) {
               </div>
 
               {/* Due Date */}
-              <div className="w-24 text-center">
+              <div className="flex justify-center">
                 {task.dueDate ? (
                   <span
                     className={cn(
-                      "flex items-center justify-center gap-1 text-xs",
-                      overdue ? "text-destructive font-semibold" : "text-muted-foreground"
+                      "flex items-center justify-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border",
+                      overdue ? "text-red-600 bg-red-500/10 border-red-500/20 shadow-sm" : "text-muted-foreground bg-muted/50 border-border/50"
                     )}
                   >
-                    <Clock className="w-3 h-3" />
+                    <Clock className="w-3.5 h-3.5 opacity-70" />
                     {new Date(task.dueDate).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                     })}
                   </span>
                 ) : (
-                  <span className="text-xs text-muted-foreground">—</span>
+                  <span className="text-xs font-bold text-muted-foreground opacity-50">—</span>
                 )}
               </div>
             </div>
           );
         })}
+        </div>
+        </div>
       </div>
     </div>
+      
+    {/* Modals */}
+      {activeTask && (
+        <TaskModal
+          taskId={activeTask}
+          workspaceId={workspaceId}
+          onClose={() => setActiveTask(null)}
+          onUpdated={() => router.refresh()}
+          onDeleted={() => router.refresh()}
+        />
+      )}
+    </>
   );
 }

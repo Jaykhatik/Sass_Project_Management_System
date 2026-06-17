@@ -28,101 +28,100 @@ export default async function DashboardPage() {
   if (!workspaceWithData) notFound();
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Good morning</h1>
-          <p className="text-muted-foreground mt-1">
-            Here&apos;s what&apos;s happening in {workspaceWithData.name} today.
-          </p>
-        </div>
-
-        <NewProjectButton workspaceId={workspaceWithData.id} />
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1400px] mx-auto pb-12">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+          Good morning, {user.name?.split(" ")[0] || "User"}
+        </h1>
+        <p className="text-muted-foreground text-lg font-medium">
+          Here&apos;s what&apos;s happening in <span className="text-primary">{workspaceWithData.name}</span> today.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="border rounded-xl p-6 bg-card shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <FolderKanbanIcon className="w-24 h-24" />
+        <div className="border border-border/50 rounded-3xl p-6 bg-card/40 backdrop-blur-xl shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+          <div className="absolute -top-6 -right-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
+            <FolderKanbanIcon className="w-40 h-40" />
           </div>
-          <div className="flex items-center gap-3 text-muted-foreground mb-3 relative z-10">
-            <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-500">
+          <div className="flex items-center gap-3 text-muted-foreground mb-4 relative z-10">
+            <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-500 shadow-sm border border-indigo-500/20">
               <FolderKanbanIcon className="w-5 h-5" />
             </div>
-            <h3 className="font-medium text-sm">Active Projects</h3>
+            <h3 className="font-bold tracking-wide uppercase text-xs">Active Projects</h3>
           </div>
-          <p className="text-3xl font-bold relative z-10">
+          <p className="text-4xl font-black relative z-10 text-foreground/90">
             {workspaceWithData.projects.length}
           </p>
         </div>
 
-        <div className="border rounded-xl p-6 bg-card shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <CheckCircle2 className="w-24 h-24" />
+        <div className="border border-border/50 rounded-3xl p-6 bg-card/40 backdrop-blur-xl shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+          <div className="absolute -top-6 -right-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
+            <CheckCircle2 className="w-40 h-40" />
           </div>
-          <div className="flex items-center gap-3 text-muted-foreground mb-3 relative z-10">
-            <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500">
+          <div className="flex items-center gap-3 text-muted-foreground mb-4 relative z-10">
+            <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-500 shadow-sm border border-emerald-500/20">
               <CheckCircle2 className="w-5 h-5" />
             </div>
-            <h3 className="font-medium text-sm">Tasks Completed</h3>
+            <h3 className="font-bold tracking-wide uppercase text-xs">Tasks Completed</h3>
           </div>
-          <p className="text-3xl font-bold relative z-10">24</p>
+          <p className="text-4xl font-black relative z-10 text-foreground/90">24</p>
         </div>
 
-        <div className="border rounded-xl p-6 bg-card shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Clock className="w-24 h-24" />
+        <div className="border border-border/50 rounded-3xl p-6 bg-card/40 backdrop-blur-xl shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+          <div className="absolute -top-6 -right-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
+            <Clock className="w-40 h-40" />
           </div>
-          <div className="flex items-center gap-3 text-muted-foreground mb-3 relative z-10">
-            <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
+          <div className="flex items-center gap-3 text-muted-foreground mb-4 relative z-10">
+            <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-500 shadow-sm border border-amber-500/20">
               <Clock className="w-5 h-5" />
             </div>
-            <h3 className="font-medium text-sm">Upcoming Deadlines</h3>
+            <h3 className="font-bold tracking-wide uppercase text-xs">Upcoming Deadlines</h3>
           </div>
-          <p className="text-3xl font-bold relative z-10">
+          <p className="text-4xl font-black relative z-10 text-foreground/90">
             {workspaceWithData.tasks.length}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="border rounded-xl overflow-hidden bg-card shadow-sm">
-          <div className="p-6 border-b bg-muted/20 flex items-center justify-between">
-            <h2 className="font-semibold text-lg flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-muted-foreground" />
+        <div className="border border-border/50 rounded-3xl overflow-hidden bg-card/40 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col max-h-[500px]">
+          <div className="p-5 sm:p-6 border-b border-border/50 bg-muted/30 flex items-center justify-between shrink-0">
+            <h2 className="font-bold text-lg flex items-center gap-2.5">
+              <div className="p-1.5 bg-background rounded-md shadow-sm border border-border/50">
+                <TrendingUp className="w-4 h-4 text-primary" />
+              </div>
               Recent Projects
             </h2>
-            <button className="text-sm text-primary hover:underline">
-              View all
-            </button>
+            <NewProjectButton workspaceId={workspaceWithData.id} />
           </div>
-          <div className="p-0">
+          <div className="p-0 overflow-y-auto flex-1 custom-scrollbar">
             {workspaceWithData.projects.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground text-sm">
-                No projects yet.
+              <div className="p-12 flex flex-col items-center justify-center text-muted-foreground text-sm h-full">
+                <FolderKanbanIcon className="w-12 h-12 opacity-20 mb-3" />
+                <p className="font-medium">No projects yet. Create one!</p>
               </div>
             ) : (
-              <div className="divide-y">
+              <div className="divide-y divide-border/40">
                 {workspaceWithData.projects.map((project) => (
                   <div
                     key={project.id}
-                    className="p-4 hover:bg-muted/30 transition-colors flex items-center justify-between cursor-pointer"
+                    className="p-5 hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer group"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
                       <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-medium"
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-sm transform group-hover:scale-105 transition-transform"
                         style={{ backgroundColor: project.color || "#6366F1" }}
                       >
                         {project.name.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-medium">{project.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {project.description || "No description"}
+                        <p className="font-bold text-base group-hover:text-primary transition-colors">{project.name}</p>
+                        <p className="text-xs font-medium text-muted-foreground mt-0.5 line-clamp-1">
+                          {project.description || "No description provided"}
                         </p>
                       </div>
                     </div>
-                    <div className="text-xs font-medium px-2 py-1 bg-muted rounded-md text-muted-foreground capitalize">
+                    <div className="text-[10px] font-bold px-2.5 py-1 uppercase tracking-widest bg-background border border-border/50 rounded-lg text-muted-foreground shadow-sm">
                       {project.status}
                     </div>
                   </div>
@@ -132,49 +131,53 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="border rounded-xl overflow-hidden bg-card shadow-sm">
-          <div className="p-6 border-b bg-muted/20 flex items-center justify-between">
-            <h2 className="font-semibold text-lg flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-muted-foreground" />
+        <div className="border border-border/50 rounded-3xl overflow-hidden bg-card/40 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col max-h-[500px]">
+          <div className="p-5 sm:p-6 border-b border-border/50 bg-muted/30 flex items-center justify-between shrink-0">
+            <h2 className="font-bold text-lg flex items-center gap-2.5">
+              <div className="p-1.5 bg-background rounded-md shadow-sm border border-border/50">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              </div>
               My Upcoming Tasks
             </h2>
           </div>
-          <div className="p-0">
+          <div className="p-0 overflow-y-auto flex-1 custom-scrollbar">
             {workspaceWithData.tasks.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground text-sm">
-                No upcoming tasks. You&apos;re all caught up!
+              <div className="p-12 flex flex-col items-center justify-center text-muted-foreground text-sm h-full">
+                <CheckCircle2 className="w-12 h-12 opacity-20 mb-3" />
+                <p className="font-medium">No upcoming tasks. You&apos;re all caught up!</p>
               </div>
             ) : (
-              <div className="divide-y">
+              <div className="divide-y divide-border/40">
                 {workspaceWithData.tasks.map((task) => (
                   <div
                     key={task.id}
-                    className="p-4 hover:bg-muted/30 transition-colors flex items-start gap-3 cursor-pointer"
+                    className="p-5 hover:bg-muted/40 transition-colors flex items-start gap-4 cursor-pointer group"
                   >
-                    <div className="mt-0.5 w-5 h-5 rounded border flex-shrink-0 border-muted-foreground/30 hover:border-primary hover:bg-primary/10 transition-colors"></div>
+                    <div className="mt-1 w-5 h-5 rounded-md border-2 flex-shrink-0 border-border/80 group-hover:border-primary group-hover:bg-primary/10 transition-colors shadow-sm bg-background/50"></div>
                     <div>
-                      <p className="font-medium text-sm leading-tight">
+                      <p className="font-bold text-sm leading-tight group-hover:text-primary transition-colors">
                         {task.title}
                       </p>
-                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
+                      <div className="flex items-center gap-3 mt-2 text-xs font-semibold text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 opacity-70" />
                           {task.dueDate
-                            ? new Date(task.dueDate).toLocaleDateString()
+                            ? new Date(task.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
                             : "No due date"}
                         </span>
+                        <div className="w-1 h-1 rounded-full bg-border/80" />
                         <span
-                          className={`px-1.5 py-0.5 rounded uppercase tracking-wider text-[10px] font-bold ${
+                          className={`px-2 py-0.5 rounded-md uppercase tracking-widest text-[10px] font-bold shadow-sm ${
                             task.priority === "critical"
-                              ? "bg-destructive/10 text-destructive"
+                              ? "bg-red-500/10 text-red-600 border border-red-500/20"
                               : task.priority === "high"
-                                ? "bg-orange-500/10 text-orange-600"
+                                ? "bg-orange-500/10 text-orange-600 border border-orange-500/20"
                                 : task.priority === "medium"
-                                  ? "bg-amber-500/10 text-amber-600"
-                                  : "bg-muted text-muted-foreground"
+                                  ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                                  : "bg-background border border-border/50 text-muted-foreground"
                           }`}
                         >
-                          {task.priority}
+                          {task.priority || "Normal"}
                         </span>
                       </div>
                     </div>
