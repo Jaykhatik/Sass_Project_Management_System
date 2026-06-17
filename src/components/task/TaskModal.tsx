@@ -103,7 +103,6 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
       try {
         const newSubTask = await createSubtask(taskId, {
           title: newSubTaskTitle.trim(),
-          workspaceId
         });
           const updatedTask = {
             ...task!,
@@ -329,7 +328,7 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
                   const dependentTaskId = e.target.value;
                   if (!dependentTaskId) return;
                   try {
-                    await addDependency(taskId, dependentTaskId, workspaceId);
+                    await addDependency(taskId, dependentTaskId);
                     // UI update handled silently
                   } catch (err) {
                     console.error("Failed to add dependency", err);

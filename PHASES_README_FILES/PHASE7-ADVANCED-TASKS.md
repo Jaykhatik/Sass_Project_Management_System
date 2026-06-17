@@ -11,6 +11,8 @@ Phase 7 upgrades the basic task management system built in Phase 6 into an enter
 - **Time Tracking:** Implements numerical fields for Estimated Hours, Actual Hours, and Story Points.
 - **Bulk Task Actions:** Adds multi-select checkboxes to the My Tasks view to perform mass deletions and mass status updates.
 - **Global Search:** Introduces a top-level Header search bar that uses PostgreSQL's native `mode: 'insensitive'` capabilities to search all task titles and descriptions.
+- **Axios Refactoring & Service Standardization:** Migrated the entire frontend from raw `fetch()` calls to a clean, centralized `axios`-based service architecture for maximum type-safety and error handling.
+- **Board Section Management:** Introduced dynamic Kanban column creation ("Add Section") complete with glassmorphic modal and real-time state updates.
 
 ## Files Involved
 
@@ -25,6 +27,9 @@ Phase 7 upgrades the basic task management system built in Phase 6 into an enter
 | `src/app/api/workspaces/[workspaceId]/labels/route.ts` | New API endpoint for fetching and creating `Label` records. |
 | `src/app/api/tasks/route.ts` | Upgraded to accept the `?q=` parameter for full-text search. |
 | `src/app/api/tasks/[taskId]/route.ts` | Upgraded `PATCH` and `GET` to support recursive Sub-tasks and Time metrics. |
+| `src/services/*.ts` | All files (`authService`, `taskService`, `projectClientService`, etc.) refactored to use direct `axios` implementations. |
+| `src/components/project/BoardView.tsx` | Upgraded to include the "Add Section" button and logic for dynamically creating Kanban columns. |
+| `src/components/project/CreateColumnDialog.tsx` | New glassmorphism UI modal for inputting custom column names. |
 
 ## How It Works
 
@@ -32,6 +37,8 @@ Phase 7 upgrades the basic task management system built in Phase 6 into an enter
 2. **Global Search:** Typing in the Header redirects the user to `/dashboard/tasks?q=search_term`. The `GET /api/tasks` backend query uses Prisma's `OR: [{title: {contains...}}]` logic to filter the list.
 3. **Bulk Actions:** Selecting checkboxes builds a `Set` of Task IDs. Clicking "Delete Selected" runs a `for` loop firing `DELETE` requests for each ID.
 4. **Labels:** Created in Workspace Settings, saved to the `Label` table, and then fetched inside the `TaskModal` to be attached to tasks via the `TaskLabel` join table.
+5. **Axios Services:** Every UI component imports specific async functions (e.g., `createSubtask()`, `addDependency()`) from `src/services/`. These functions use `axios` to serialize the JSON and extract nested error messages (`error.response.data.error`), meaning the UI code stays pristine.
+6. **Board Sections:** Clicking "Add Section" on the board opens a dialog. Submitting fires a `POST` request to `/api/boards/[boardId]/columns` through the `boardClientService.ts`, which persists the new column position and name to Postgres.
 
 ## API Table
 
@@ -43,6 +50,7 @@ Phase 7 upgrades the basic task management system built in Phase 6 into an enter
 | `GET` | `/api/tasks?q=[term]` | Global Search | None |
 | `POST` | `/api/tasks` | Create Sub-task | `{ parentTaskId: "PARENT_ID", ... }` |
 | `PATCH` | `/api/tasks/[taskId]` | Update Time Metrics | `{ estimatedHours: 8, actualHours: 4.5, storyPoints: 5 }` |
+| `POST` | `/api/boards/[boardId]/columns` | Add Board Section | `{ workspaceId: "WS_ID", name: "QA" }` |
 
 ---
 
@@ -94,7 +102,12 @@ Follow these steps exactly to verify that all enterprise features are working se
 5. Wait one second. The page will auto-refresh, and both tasks will now have a green checkmark!
 6. **New Auto-Routing Magic:** Navigate back to your Project Board. You will notice that those two tasks physically moved into the "Done" column! The backend now mathematically detects your board's column structure and moves tasks automatically.
 
-
+### Step 7: Test Add Board Section (Column Creation)
+1. Go to your Project Kanban Board (`/dashboard/projects/YOUR_PROJECT_ID`).
+2. Look at the top right header of the board and click the **"Add Section"** button.
+3. A sleek glassmorphism modal will pop up. Enter a name like "Blocked" or "Review".
+4. Click **Create Section**.
+5. The modal will close, and your brand new column will be instantly appended to the far right of your Kanban board! You can immediately start dragging tasks into it.
 
 ## 🛠️ How to Test Phase 7 (Backend via Postman)
 

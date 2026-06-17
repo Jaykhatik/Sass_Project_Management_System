@@ -102,7 +102,7 @@ export const getAllTasks = async (workspaceId: string, assigneeId?: string) => {
  * Creates a nested subtask under a parent task.
  * Used in: `src/components/task/TaskModal.tsx`
  */
-export const createSubtask = async (taskId: string, data: { title: string; workspaceId: string }) => {
+export const createSubtask = async (taskId: string, data: { title: string; priority?: string; status?: string }) => {
   try {
     const res = await axios.post(`${API_BASE}${TASK_API_ROUTES.subtasks(taskId)}`, data);
     return res.data as Task;
@@ -115,9 +115,9 @@ export const createSubtask = async (taskId: string, data: { title: string; works
  * Adds a blocking dependency to a task.
  * Used in: `src/components/task/TaskModal.tsx`
  */
-export const addDependency = async (taskId: string, dependencyId: string, workspaceId: string) => {
+export const addDependency = async (taskId: string, dependentTaskId: string) => {
   try {
-    const res = await axios.post(`${API_BASE}${TASK_API_ROUTES.dependencies(taskId)}`, { workspaceId, dependencyId });
+    const res = await axios.post(`${API_BASE}${TASK_API_ROUTES.dependencies(taskId)}`, { dependentTaskId });
     return res.data as Task;
   } catch (error: any) {
     throw new Error("Failed to add dependency");
