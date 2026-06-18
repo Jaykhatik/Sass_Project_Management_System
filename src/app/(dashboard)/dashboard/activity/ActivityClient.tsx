@@ -9,6 +9,77 @@ import { getProjectsClient } from "@/services/projectClientService";
 import { Loader2, Activity, Filter, RefreshCcw } from "lucide-react";
 import { TaskModal } from "@/components/task/TaskModal";
 
+const CustomSelect = ({
+  value,
+  onChange,
+  options,
+  className,
+  disabled,
+}: any) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption =
+    options.find((opt: any) => String(opt.value) === String(value)) || options[0];
+
+  return (
+    <div
+      className={`relative ${className} ${disabled ? "opacity-50 pointer-events-none" : ""}`}
+      ref={ref}
+    >
+      <div
+        className="w-full h-full bg-background border border-border/50 rounded-xl px-4 py-2.5 text-sm font-medium focus:ring-2 focus:ring-primary/50 outline-none hover:bg-muted transition-all cursor-pointer flex items-center justify-between gap-3 shadow-sm"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span className="truncate">
+          {selectedOption ? selectedOption.label : "Select..."}
+        </span>
+        <svg
+          className={`w-4 h-4 shrink-0 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </div>
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-2 bg-background border border-border shadow-lg rounded-xl overflow-hidden animate-in fade-in slide-in-from-top-2">
+          {options.map((opt: any) => (
+            <div
+              key={opt.value}
+              className={`px-4 py-3 text-sm cursor-pointer hover:bg-muted transition-colors ${opt.disabled ? "opacity-50 cursor-not-allowed" : ""} ${String(value) === String(opt.value) ? "bg-primary/10 text-primary font-semibold" : "text-foreground"}`}
+              onClick={() => {
+                if (!opt.disabled) {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }
+              }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 function formatDistanceToNowNative(dateString: string) {
   const date = new Date(dateString);
   const now = new Date();
@@ -87,7 +158,7 @@ export function ActivityClient({ workspaceId }: { workspaceId: string }) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Workspace Activity</h1>
           <p className="text-sm text-muted-foreground">Monitor all events across the workspace</p>
@@ -95,38 +166,37 @@ export function ActivityClient({ workspaceId }: { workspaceId: string }) {
         <button 
           onClick={handleRefresh}
           disabled={refreshing}
-          className="p-2 border rounded-full hover:bg-muted text-muted-foreground transition-colors disabled:opacity-50"
+          className="p-2 border rounded-full hover:bg-muted text-muted-foreground transition-colors disabled:opacity-50 w-full sm:w-auto flex justify-center items-center gap-2 sm:gap-0"
           title="Refresh"
         >
           <RefreshCcw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+          <span className="sm:hidden text-sm font-medium">Refresh</span>
         </button>
       </div>
 
       <div className="flex flex-wrap items-center gap-4 p-4 rounded-xl border bg-card text-card-foreground">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium w-full sm:w-auto">
+        <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-muted-foreground font-medium w-full sm:w-auto">
           <Filter className="w-4 h-4" />
           <span>Filter</span>
         </div>
-        <select
+        <CustomSelect
           value={selectedProject}
-          onChange={(e) => setSelectedProject(e.target.value)}
-          className="text-sm bg-background border rounded-md px-3 py-1.5 outline-none focus:ring-2 ring-primary/50 flex-1 sm:flex-none min-w-[150px]"
-        >
-          <option value="">All Projects</option>
-          {projects.map((p) => (
-            <option key={p.project_id} value={p.project_id}>{p.projectInfo.name}</option>
-          ))}
-        </select>
-        <select
+          onChange={(val: string) => setSelectedProject(val)}
+          options={[
+            { value: "", label: "All Projects" },
+            ...projects.map((p) => ({ value: p.project_id, label: p.projectInfo.name }))
+          ]}
+          className="flex-1 sm:flex-none min-w-[150px] w-full sm:w-48"
+        />
+        <CustomSelect
           value={selectedMember}
-          onChange={(e) => setSelectedMember(e.target.value)}
-          className="text-sm bg-background border rounded-md px-3 py-1.5 outline-none focus:ring-2 ring-primary/50 flex-1 sm:flex-none min-w-[150px]"
-        >
-          <option value="">All Members</option>
-          {members.map((m) => (
-            <option key={m.user.id} value={m.user.id}>{m.user.name}</option>
-          ))}
-        </select>
+          onChange={(val: string) => setSelectedMember(val)}
+          options={[
+            { value: "", label: "All Members" },
+            ...members.map((m) => ({ value: m.user.id, label: m.user.name || m.user.email }))
+          ]}
+          className="flex-1 sm:flex-none min-w-[150px] w-full sm:w-48"
+        />
       </div>
 
       <div className="space-y-4">

@@ -359,7 +359,7 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
                 className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-muted/50 transition-all duration-300 gap-3 sm:gap-0 relative overflow-hidden cursor-pointer"
               >
                 <div className="absolute inset-y-0 left-0 w-1 bg-primary/80 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300" />
-                <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1 z-10">
+                <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1 z-10 pr-12 sm:pr-0 pb-6 sm:pb-0">
                   <input
                     type="checkbox"
                     checked={selectedTasks.has(task.id)}
@@ -381,34 +381,38 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
                   <div
                     className="min-w-0"
                   >
-                    <h4 className="text-sm font-semibold group-hover:text-primary transition-colors flex flex-wrap items-center gap-2">
+                    <h4 className="text-sm font-semibold group-hover:text-primary transition-colors flex items-center">
                       {task.title}
-                      {task.blockedBy && task.blockedBy.length > 0 && (
-                        <span
-                          title="Blocked by another task"
-                          className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white shadow-sm bg-red-600 flex items-center gap-1 shrink-0"
-                        >
-                          <ShieldAlert className="w-3 h-3" /> Blocked
-                        </span>
-                      )}
-                      {task.labels &&
-                        task.labels.map((tl: any) => (
-                          <span
-                            key={tl.label.id}
-                            className="text-[10px] font-bold px-2 py-0.5 rounded text-white shadow-sm"
-                            style={{ backgroundColor: tl.label.color }}
-                          >
-                            {tl.label.name}
-                          </span>
-                        ))}
                     </h4>
-                    <p className="text-xs text-muted-foreground mt-1 flex flex-wrap items-center gap-2">
+                    {((task.blockedBy?.length ?? 0) > 0 || (task.labels?.length ?? 0) > 0) && (
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                        {task.blockedBy && task.blockedBy.length > 0 && (
+                          <span
+                            title="Blocked by another task"
+                            className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white shadow-sm bg-red-600 flex items-center gap-1 shrink-0 whitespace-nowrap"
+                          >
+                            <ShieldAlert className="w-3 h-3" /> Blocked
+                          </span>
+                        )}
+                        {task.labels &&
+                          task.labels.map((tl: any) => (
+                            <span
+                              key={tl.label.id}
+                              className="text-[10px] font-bold px-2 py-0.5 rounded text-white shadow-sm whitespace-nowrap"
+                              style={{ backgroundColor: tl.label.color }}
+                            >
+                              {tl.label.name}
+                            </span>
+                          ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span className="font-medium text-foreground/70 truncate max-w-full">
                         {(task as any).project?.name || "Unknown Project"}
                       </span>
                       {task.dueDate && (
                         <>
-                          <span className="hidden sm:inline">•</span>
+                          <span className="inline">•</span>
                           <span
                             className={`shrink-0 ${new Date(task.dueDate) < new Date() ? "text-red-500 font-medium" : ""}`}
                           >
@@ -416,37 +420,36 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
                           </span>
                         </>
                       )}
+                      {/* Render Sub-tasks Summary */}
+                      {task.subTasks && task.subTasks.length > 0 && (() => {
+                        const completedCount = task.subTasks.filter((st:any) => st.status === 'done').length;
+                        const totalCount = task.subTasks.length;
+                        const allDone = completedCount === totalCount;
+                        
+                        return (
+                          <>
+                            <span 
+                              title={`${completedCount} of ${totalCount} sub-tasks completed`}
+                              className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded border shadow-sm transition-colors whitespace-nowrap ${
+                                allDone 
+                                  ? "text-emerald-600 bg-emerald-500/10 border-emerald-500/30" 
+                                  : "text-muted-foreground bg-muted/60 border-border/50"
+                              }`}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-3 h-3 ${allDone ? "opacity-100" : "opacity-70"}`}>
+                                <polyline points="9 11 12 14 22 4"></polyline>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                              </svg>
+                              {completedCount}/{totalCount}
+                            </span>
+                          </>
+                        );
+                      })()}
                     </p>
-
-                    {/* Render Sub-tasks Summary */}
-                    {task.subTasks && task.subTasks.length > 0 && (() => {
-                      const completedCount = task.subTasks.filter((st:any) => st.status === 'done').length;
-                      const totalCount = task.subTasks.length;
-                      const allDone = completedCount === totalCount;
-                      
-                      return (
-                        <div className="mt-2.5">
-                          <span 
-                            title={`${completedCount} of ${totalCount} sub-tasks completed`}
-                            className={`inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded border shadow-sm transition-colors ${
-                              allDone 
-                                ? "text-emerald-600 bg-emerald-500/10 border-emerald-500/30" 
-                                : "text-muted-foreground bg-muted/60 border-border/50"
-                            }`}
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-3 h-3 ${allDone ? "opacity-100" : "opacity-70"}`}>
-                              <polyline points="9 11 12 14 22 4"></polyline>
-                              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                            </svg>
-                            {completedCount}/{totalCount}
-                          </span>
-                        </div>
-                      );
-                    })()}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 sm:ml-4 ml-9 sm:mt-0">
+                <div className="absolute sm:relative bottom-4 right-4 sm:bottom-auto sm:right-auto flex items-center gap-2 sm:gap-3 sm:ml-4 mt-0">
                   <div className="hidden md:flex items-center gap-4 text-xs text-muted-foreground mr-4">
                     {task.storyPoints != null && (
                       <span

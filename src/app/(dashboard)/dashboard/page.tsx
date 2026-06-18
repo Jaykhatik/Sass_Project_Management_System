@@ -79,18 +79,18 @@ export default async function DashboardPage() {
   });
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1400px] mx-auto pb-12">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1400px] mx-auto pb-12 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-0">
+      <div className="flex flex-col gap-1.5 sm:gap-1">
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
           Good morning, {user.name?.split(" ")[0] || "User"}
         </h1>
-        <p className="text-muted-foreground text-lg font-medium">
+        <p className="text-muted-foreground text-base sm:text-lg font-medium">
           Here&apos;s what&apos;s happening in <span className="text-primary">{workspaceWithData.name}</span> today.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="border border-border/50 rounded-3xl p-6 bg-card/40 backdrop-blur-xl shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="border border-border/50 rounded-3xl p-5 sm:p-6 bg-card/40 backdrop-blur-xl shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
           <div className="absolute -top-6 -right-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
             <FolderKanbanIcon className="w-40 h-40 text-indigo-500" />
           </div>
@@ -105,7 +105,7 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        <div className="border border-border/50 rounded-3xl p-6 bg-card/40 backdrop-blur-xl shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+        <div className="border border-border/50 rounded-3xl p-5 sm:p-6 bg-card/40 backdrop-blur-xl shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
           <div className="absolute -top-6 -right-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
             <CheckCircle2 className="w-40 h-40 text-emerald-500" />
           </div>
@@ -120,7 +120,7 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        <div className="border border-border/50 rounded-3xl p-6 bg-card/40 backdrop-blur-xl shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
+        <div className="border border-border/50 rounded-3xl p-5 sm:p-6 bg-card/40 backdrop-blur-xl shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
           <div className="absolute -top-6 -right-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
             <Clock className="w-40 h-40 text-amber-500" />
           </div>
@@ -136,16 +136,18 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="border border-border/50 rounded-3xl overflow-hidden bg-card/40 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col max-h-[500px]">
-          <div className="p-5 sm:p-6 border-b border-border/50 bg-muted/30 flex items-center justify-between shrink-0">
-            <h2 className="font-bold text-lg flex items-center gap-2.5">
-              <div className="p-1.5 bg-background rounded-md shadow-sm border border-border/50">
-                <TrendingUp className="w-4 h-4 text-primary" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+        <div className="border border-border/50 rounded-3xl overflow-hidden bg-card/40 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col max-h-[500px] sm:max-h-[600px]">
+          <div className="p-3 sm:p-6 border-b border-border/50 bg-muted/30 flex items-center justify-between shrink-0 gap-4">
+            <h2 className="font-bold text-base sm:text-lg flex items-center gap-2 sm:gap-2.5 whitespace-nowrap">
+              <div className="p-1 sm:p-1.5 bg-background rounded-md shadow-sm border border-border/50 shrink-0">
+                <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
               </div>
-              Recent Projects
+              <span className="truncate">Recent Projects</span>
             </h2>
-            <NewProjectButton workspaceId={workspaceWithData.id} />
+            <div className="shrink-0">
+              <NewProjectButton workspaceId={workspaceWithData.id} />
+            </div>
           </div>
           <div className="p-0 overflow-y-auto flex-1 custom-scrollbar">
             {workspaceWithData.projects.length === 0 ? (
@@ -208,13 +210,13 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="border border-border/50 rounded-3xl overflow-hidden bg-card/40 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col max-h-[500px]">
-          <div className="p-5 sm:p-6 border-b border-border/50 bg-muted/30 flex items-center justify-between shrink-0">
-            <h2 className="font-bold text-lg flex items-center gap-2.5">
-              <div className="p-1.5 bg-background rounded-md shadow-sm border border-border/50">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+        <div className="border border-border/50 rounded-3xl overflow-hidden bg-card/40 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex flex-col max-h-[500px] sm:max-h-[600px]">
+          <div className="p-4 sm:p-6 border-b border-border/50 bg-muted/30 flex items-center justify-between shrink-0 gap-2">
+            <h2 className="font-bold text-base sm:text-lg flex items-center gap-2 sm:gap-2.5 whitespace-nowrap">
+              <div className="p-1 sm:p-1.5 bg-background rounded-md shadow-sm border border-border/50 shrink-0">
+                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
               </div>
-              My(Owner's) Upcoming Tasks
+              <span className="truncate">My Upcoming Tasks</span>
             </h2>
           </div>
           <div className="p-0 overflow-y-auto flex-1 custom-scrollbar">

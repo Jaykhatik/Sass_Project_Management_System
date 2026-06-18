@@ -82,10 +82,10 @@ export function MemberList({
   return (
     <div className="space-y-6">
       {isPrivileged && (
-        <div className="flex justify-end mb-4">
+        <div className="flex justify-center sm:justify-end mb-4">
           <button
             onClick={() => setIsInviteModalOpen(true)}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 text-sm"
+            className="w-full sm:w-auto justify-center px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 text-sm"
           >
             <Plus className="w-4 h-4" />
             Invite Member
@@ -102,25 +102,25 @@ export function MemberList({
       {members.map((member) => (
         <div
           key={member.membership_id}
-          className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+          className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-muted/30 transition-colors gap-3 sm:gap-0"
         >
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold shrink-0 shadow-sm">
               {member.user.name
                 ? member.user.name.charAt(0).toUpperCase()
                 : member.user.email.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <p className="font-medium text-sm">
+            <div className="min-w-0">
+              <p className="font-medium text-sm truncate">
                 {member.user.name || "Unknown User"}
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground truncate">
                 {member.user.email}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-1 sm:mt-0 pl-14 sm:pl-0">
             <div
               className={cn(
                 "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border",
@@ -137,13 +137,12 @@ export function MemberList({
               <span className="capitalize">{member.role}</span>
             </div>
 
-            <div className="flex flex-col gap-1.5 items-end">
-
+            <div className="flex items-center gap-2">
               {isPrivileged && member.role !== "owner" && member.user.id !== currentUserId && (
                 <button
                   onClick={() => handleRemove(member.user.id)}
                   disabled={loadingId === member.user.id}
-                  className="text-xs text-destructive hover:text-destructive/80 font-medium flex items-center gap-1 mt-1 disabled:opacity-50"
+                  className="text-xs text-destructive hover:text-destructive/80 font-medium flex items-center gap-1 disabled:opacity-50"
                 >
                   <Trash2 className="w-3 h-3" />
                   Remove
@@ -164,20 +163,20 @@ export function MemberList({
           </div>
           <div className="divide-y divide-border">
             {invites.map((invite) => (
-              <div key={invite.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
-                <div className="flex items-center gap-4">
+              <div key={invite.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-muted/30 transition-colors gap-3 sm:gap-0">
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                   <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground shrink-0 shadow-sm">
                     <Mail className="w-4 h-4" />
                   </div>
-                  <div>
-                    <p className="font-medium text-sm text-muted-foreground">{invite.email}</p>
-                    <p className="text-xs text-muted-foreground/70">
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm text-muted-foreground truncate">{invite.email}</p>
+                    <p className="text-xs text-muted-foreground/70 truncate">
                       Invited by {invite.inviter.name || invite.inviter.email}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto mt-1 sm:mt-0 pl-14 sm:pl-0">
                   <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border bg-muted/50 text-muted-foreground">
                     <span className="capitalize">{invite.role}</span>
                   </div>

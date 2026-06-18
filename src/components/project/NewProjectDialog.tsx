@@ -62,14 +62,14 @@ export function NewProjectDialog({ workspaceId, onClose }: Props) {
         />
 
         {/* Dialog */}
-        <div className="relative bg-card border rounded-2xl shadow-2xl w-full max-w-md p-6 text-left align-middle animate-in zoom-in-95 duration-200">
+        <div className="relative bg-card border rounded-2xl shadow-2xl w-full max-w-md p-5 sm:p-6 text-left align-middle animate-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg" style={{ backgroundColor: `${color}20` }}>
-              <FolderKanban className="w-5 h-5" style={{ color }} />
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="p-1.5 sm:p-2 rounded-lg" style={{ backgroundColor: `${color}20` }}>
+              <FolderKanban className="w-4 h-4 sm:w-5 sm:h-5" style={{ color }} />
             </div>
-            <h2 className="text-lg font-semibold">New Project</h2>
+            <h2 className="text-base sm:text-lg font-semibold">New Project</h2>
           </div>
           <button
             onClick={onClose}
@@ -79,7 +79,7 @@ export function NewProjectDialog({ workspaceId, onClose }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           {error && (
             <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md border border-destructive/20">
               {error}
@@ -94,7 +94,7 @@ export function NewProjectDialog({ workspaceId, onClose }: Props) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Website Redesign"
-              className="w-full border rounded-md px-3 py-2 text-sm bg-background outline-none focus:ring-2 ring-primary/50 transition-shadow"
+              className="w-full border rounded-md px-3 py-1.5 sm:py-2 text-sm bg-background outline-none focus:ring-2 ring-primary/50 transition-shadow"
             />
           </div>
 
@@ -105,7 +105,7 @@ export function NewProjectDialog({ workspaceId, onClose }: Props) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What is this project about?"
               rows={3}
-              className="w-full border rounded-md px-3 py-2 text-sm bg-background outline-none focus:ring-2 ring-primary/50 transition-shadow resize-none"
+              className="w-full border rounded-md px-3 py-1.5 sm:py-2 text-sm bg-background outline-none focus:ring-2 ring-primary/50 transition-shadow resize-none"
             />
           </div>
 
@@ -117,7 +117,7 @@ export function NewProjectDialog({ workspaceId, onClose }: Props) {
                   key={c}
                   type="button"
                   onClick={() => setColor(c)}
-                  className="w-7 h-7 rounded-full transition-transform hover:scale-110 focus:outline-none"
+                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-full transition-transform hover:scale-110 focus:outline-none"
                   style={{
                     backgroundColor: c,
                     boxShadow: color === c ? `0 0 0 2px white, 0 0 0 4px ${c}` : "none",
@@ -131,14 +131,14 @@ export function NewProjectDialog({ workspaceId, onClose }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 border rounded-md px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
+              className="flex-1 border rounded-md px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium hover:bg-muted transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-md px-4 py-2 text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-md px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
               Create Project

@@ -58,8 +58,8 @@ export default async function MembersPage() {
   const members = membersData.members || membersData;
   
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
-      <div>
+    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500 px-4 sm:px-6 lg:px-8 py-4 sm:py-0">
+      <div className="pt-2 sm:pt-0 text-center sm:text-left">
         <h1 className="text-2xl font-bold tracking-tight">Team Members</h1>
         <p className="text-sm text-muted-foreground mt-1">Manage who has access to this workspace and their roles.</p>
       </div>
