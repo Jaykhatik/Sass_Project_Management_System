@@ -48,9 +48,9 @@ export function ListView({ columns, workspaceId }: Props) {
     <>
       <div className="border border-border/50 rounded-3xl overflow-hidden bg-card/40 backdrop-blur-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
       <div className="overflow-x-auto [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 [&::-webkit-scrollbar-track]:bg-transparent">
-        <div className="min-w-[900px]">
+        <div className="min-w-full sm:min-w-[900px]">
           {/* Table Header */}
-          <div className="grid grid-cols-[1fr_120px_100px_140px_120px_120px] gap-4 px-6 py-3.5 bg-muted/40 border-b border-border/50 text-[11px] font-extrabold text-muted-foreground uppercase tracking-widest">
+          <div className="hidden sm:grid grid-cols-[1fr_120px_100px_140px_120px_120px] gap-4 px-6 py-3.5 bg-muted/40 border-b border-border/50 text-[11px] font-extrabold text-muted-foreground uppercase tracking-widest">
             <span>Task</span>
             <span className="text-center">Status</span>
             <span className="text-center">Priority</span>
@@ -68,10 +68,10 @@ export function ListView({ columns, workspaceId }: Props) {
             <div
               key={task.id}
               onClick={() => setActiveTask(task.id)}
-              className="grid grid-cols-[1fr_120px_100px_140px_120px_120px] gap-4 items-center px-6 py-4 hover:bg-muted/40 transition-all duration-300 cursor-pointer group relative overflow-hidden before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-primary before:-translate-x-full group-hover:before:translate-x-0 before:transition-transform before:duration-300 before:ease-out before:rounded-r-full"
+              className="flex flex-col sm:grid sm:grid-cols-[1fr_120px_100px_140px_120px_120px] gap-3 sm:gap-4 items-start sm:items-center px-4 sm:px-6 py-4 hover:bg-muted/40 transition-all duration-300 cursor-pointer group relative overflow-hidden before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-primary before:-translate-x-full group-hover:before:translate-x-0 before:transition-transform before:duration-300 before:ease-out before:rounded-r-full"
             >
               {/* Title + Labels */}
-              <div className="min-w-0 pr-4">
+              <div className="min-w-0 pr-0 sm:pr-4 w-full sm:w-auto">
                 <div className="flex items-center gap-2.5">
                   <p className="text-sm font-bold truncate group-hover:text-primary transition-colors">{task.title}</p>
                   {task.blockedBy && task.blockedBy.length > 0 && (
@@ -120,25 +120,27 @@ export function ListView({ columns, workspaceId }: Props) {
                 })()}
               </div>
 
-              {/* Status */}
-              <div className="flex justify-center">
-                <span
-                  className={cn(
-                    "text-[10px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-lg border shadow-sm",
-                    STATUS_STYLES[task.status] ?? "bg-slate-500/10 text-slate-600 border-slate-500/20"
-                  )}
-                >
-                  {task.status.replace("_", " ")}
-                </span>
-              </div>
+              {/* Mobile Flex Wrapper for Meta elements */}
+              <div className="flex flex-wrap items-center gap-2 sm:gap-0 w-full sm:w-auto sm:contents mt-1 sm:mt-0">
+                {/* Status */}
+                <div className="flex justify-start sm:justify-center">
+                  <span
+                    className={cn(
+                      "text-[10px] uppercase font-bold tracking-widest px-2.5 py-1 rounded-lg border shadow-sm",
+                      STATUS_STYLES[task.status] ?? "bg-slate-500/10 text-slate-600 border-slate-500/20"
+                    )}
+                  >
+                    {task.status.replace("_", " ")}
+                  </span>
+                </div>
 
-              {/* Priority */}
-              <div className="flex justify-center items-center gap-1.5">
-                {PRIORITY_ICON[task.priority] ?? PRIORITY_ICON.none}
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  {task.priority}
-                </span>
-              </div>
+                {/* Priority */}
+                <div className="flex justify-start sm:justify-center items-center gap-1.5">
+                  {PRIORITY_ICON[task.priority] ?? PRIORITY_ICON.none}
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    {task.priority}
+                  </span>
+                </div>
 
               {/* Metrics (Story Points & Hours) */}
               <div className="flex flex-col items-center justify-center gap-1.5">
@@ -176,24 +178,25 @@ export function ListView({ columns, workspaceId }: Props) {
                 )}
               </div>
 
-              {/* Due Date */}
-              <div className="flex justify-center">
-                {task.dueDate ? (
-                  <span
-                    className={cn(
-                      "flex items-center justify-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border",
-                      overdue ? "text-red-600 bg-red-500/10 border-red-500/20 shadow-sm" : "text-muted-foreground bg-muted/50 border-border/50"
-                    )}
-                  >
-                    <Clock className="w-3.5 h-3.5 opacity-70" />
-                    {new Date(task.dueDate).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </span>
-                ) : (
-                  <span className="text-xs font-bold text-muted-foreground opacity-50">—</span>
-                )}
+                {/* Due Date */}
+                <div className="flex justify-start sm:justify-center ml-auto sm:ml-0">
+                  {task.dueDate ? (
+                    <span
+                      className={cn(
+                        "flex items-center justify-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg border",
+                        overdue ? "text-red-600 bg-red-500/10 border-red-500/20 shadow-sm" : "text-muted-foreground bg-muted/50 border-border/50"
+                      )}
+                    >
+                      <Clock className="w-3.5 h-3.5 opacity-70" />
+                      {new Date(task.dueDate).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                  ) : (
+                    <span className="text-xs font-bold text-muted-foreground opacity-50 hidden sm:inline-block">—</span>
+                  )}
+                </div>
               </div>
             </div>
           );

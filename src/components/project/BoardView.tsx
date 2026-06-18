@@ -103,7 +103,7 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-8 pt-2 min-h-[calc(100vh-320px)] items-start snap-x snap-mandatory sm:snap-none [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 [&::-webkit-scrollbar-track]:bg-transparent transition-colors">
+      <div className="flex flex-col sm:flex-row gap-12 sm:gap-6 sm:overflow-x-auto pb-8 pt-2 px-4 sm:px-0 min-h-[calc(100vh-320px)] items-stretch sm:items-start sm:[&::-webkit-scrollbar]:h-2 sm:[&::-webkit-scrollbar-thumb]:rounded-full sm:[&::-webkit-scrollbar-thumb]:bg-border sm:hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 sm:[&::-webkit-scrollbar-track]:bg-transparent transition-colors">
       {columns.map((col, idx) => {
         const colorClass = COL_HEADER_COLORS[idx % COL_HEADER_COLORS.length];
         const atLimit = col.taskLimit ? col.tasks.length >= col.taskLimit : false;
@@ -111,7 +111,7 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
         return (
           <div
             key={col.id}
-            className="flex-shrink-0 flex-1 min-w-[250px] max-w-[320px] flex flex-col gap-3 snap-center"
+            className="flex-shrink-0 w-full sm:flex-1 sm:w-auto sm:min-w-[250px] sm:max-w-[320px] flex flex-col gap-3 border-2 border-dashed border-border/40 rounded-3xl p-3 sm:p-4 bg-muted/5 sm:bg-transparent"
             onDragOver={handleDragOver}
             onDrop={(e) => handleDrop(e, col.id)}
           >

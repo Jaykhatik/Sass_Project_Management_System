@@ -26,9 +26,9 @@ export function ProjectDetailClient({ project, isOwner }: { project: Project, is
   return (
     <div className="space-y-5">
       {/* Project Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4 text-center sm:text-left px-4 sm:px-0">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0"
+          className="w-12 h-12 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-white font-bold text-xl sm:text-lg shrink-0 mx-auto sm:mx-0 shadow-sm"
           style={{ backgroundColor: project.projectInfo.color ?? "#6366F1" }}
         >
           {project.projectInfo.name.charAt(0).toUpperCase()}
@@ -46,19 +46,19 @@ export function ProjectDetailClient({ project, isOwner }: { project: Project, is
       </div>
 
       {/* Tab Bar */}
-      <div className="flex items-center gap-1 border-b">
+      <div className="flex items-center w-full border-b overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] px-1 sm:px-0">
         {TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setActiveTab(key)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px",
+              "flex flex-1 sm:flex-none items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap",
               activeTab === key
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted",
             )}
           >
-            <Icon className="w-4 h-4" />
+            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             {label}
           </button>
         ))}
