@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSessionUserWithRefresh } from "@/lib/auth";
+import { logActivity } from "@/lib/activityLogger";
 
 export async function GET(
   request: Request,
@@ -54,13 +55,12 @@ export async function PATCH(
     
     const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
     const isOwner = workspace?.ownerId === user.id;
-    const isAdmin = membership?.role === "admin" || isOwner;
 
     if (!membership && !isOwner) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Authorization: User must be an Admin/Owner, the task creator, or assigned to the task
+    // Authorization: User must be the Owner or assigned to the task
     const existingTask = await prisma.task.findUnique({
       where: { id: taskId },
       include: { assignees: true }
@@ -71,10 +71,9 @@ export async function PATCH(
     }
 
     const isAssignee = existingTask.assignees.some((a: any) => a.userId === user.id);
-    const isCreator = existingTask.createdById === user.id;
 
-    if (!isAdmin && !isAssignee && !isCreator) {
-      return NextResponse.json({ error: "Only assignees or admins can update this task" }, { status: 403 });
+    if (!isOwner && !isAssignee) {
+      return NextResponse.json({ error: "Only assigned members or the workspace owner can update this task" }, { status: 403 });
     }
 
     // If assigneeIds is provided, we delete existing assignees and recreate them
@@ -89,6 +88,25 @@ export async function PATCH(
           }))
         }
       };
+
+      // Cascade assignee updates to subtasks
+      const subtasks = await prisma.task.findMany({ where: { parentTaskId: taskId } });
+      if (subtasks.length > 0) {
+        for (const st of subtasks) {
+          await prisma.task.update({
+            where: { id: st.id },
+            data: {
+              assignees: {
+                deleteMany: {},
+                create: assigneeIds.map((userId: string) => ({
+                  userId,
+                  assignedBy: user.id
+                }))
+              }
+            }
+          });
+        }
+      }
     }
 
     let labelsUpdate = {};
@@ -103,15 +121,29 @@ export async function PATCH(
       };
     }
 
+    const existingTaskData = await prisma.task.findUnique({
+      where: { id: taskId }
+    });
+
+    if (!existingTaskData) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
+    }
+
+    if (status === "done" || status === "completed") {
+      const incompleteSubtasks = await prisma.task.count({
+        where: { parentTaskId: taskId, status: { notIn: ["done", "completed"] } }
+      });
+
+      if (incompleteSubtasks > 0) {
+        return NextResponse.json({ error: `Cannot complete task: ${incompleteSubtasks} subtask(s) still pending.` }, { status: 400 });
+      }
+    }
+
     let finalColumnId = columnId;
     if (status !== undefined && columnId === undefined) {
-      const currentTask = await prisma.task.findUnique({
-        where: { id: taskId },
-        select: { boardId: true }
-      });
-      if (currentTask?.boardId) {
+      if (existingTaskData.boardId) {
         const boardColumns = await prisma.column.findMany({
-          where: { boardId: currentTask.boardId },
+          where: { boardId: existingTaskData.boardId },
           orderBy: { position: "asc" }
         });
         
@@ -154,8 +186,42 @@ export async function PATCH(
       }
     });
 
+    // Check if any actual scalar values changed
+    let hasChanges = false;
+    const keysToCheck = ["title", "description", "priority", "status", "columnId", "estimatedHours", "actualHours", "storyPoints", "parentTaskId", "sprintId"];
+    
+    for (const key of keysToCheck) {
+      if ((updated as any)[key] !== (existingTaskData as any)[key]) {
+        hasChanges = true;
+        break;
+      }
+    }
+    
+    // Dates need special comparison
+    if (updated.dueDate?.getTime() !== existingTaskData.dueDate?.getTime()) {
+      hasChanges = true;
+    }
+    
+    // Assignees or Labels might have changed
+    if (assigneeIds !== undefined || labelIds !== undefined) {
+      hasChanges = true;
+    }
+
+    if (hasChanges) {
+      await logActivity(
+        workspaceId,
+        user.id,
+        "task",
+        taskId,
+        "updated",
+        existingTaskData,
+        updated
+      );
+    }
+
     return NextResponse.json(updated);
   } catch (error) {
+    console.error("Task Update Error:", error);
     return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
   }
 }
@@ -174,16 +240,25 @@ export async function DELETE(
 
     if (!workspaceId) return NextResponse.json({ error: "workspaceId required" }, { status: 400 });
 
-    const membership = await prisma.workspaceMember.findUnique({
-      where: { workspaceId_userId: { workspaceId, userId: user.id } },
-    });
-    if (!membership && workspaceId !== (await prisma.workspace.findUnique({ where: { id: workspaceId } }))?.ownerId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
+    const isOwner = workspace?.ownerId === user.id;
+
+    if (!isOwner) {
+      return NextResponse.json({ error: "Only the workspace owner can delete tasks" }, { status: 403 });
     }
 
     // Delete subtasks first to avoid foreign key constraints
     await prisma.task.deleteMany({ where: { parentTaskId: taskId } });
     await prisma.task.delete({ where: { id: taskId } });
+
+    await logActivity(
+      workspaceId,
+      user.id,
+      "task",
+      taskId,
+      "deleted"
+    );
+
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ error: "Failed to delete task" }, { status: 500 });

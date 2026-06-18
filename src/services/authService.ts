@@ -52,3 +52,15 @@ export const refreshSession = async () => {
     throw new Error("Failed to refresh session");
   }
 };
+
+/**
+ * Gets the currently authenticated user
+ */
+export const getCurrentUser = async () => {
+  try {
+    const res = await axios.get(`${API_BASE}${AUTH_API_ROUTES.me}`);
+    return res.data;
+  } catch (error) {
+    return null;
+  }
+};

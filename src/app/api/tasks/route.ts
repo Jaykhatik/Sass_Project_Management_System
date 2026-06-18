@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSessionUserWithRefresh } from "@/lib/auth";
+import { logActivity } from "@/lib/activityLogger";
 
 export const dynamic = "force-dynamic";
 
@@ -73,6 +74,16 @@ export async function POST(request: Request) {
         }
       }
     });
+
+    await logActivity(
+      workspaceId,
+      user.id,
+      "task",
+      task.id,
+      "created",
+      null,
+      { title: task.title }
+    );
 
     return NextResponse.json(task, { status: 201 });
   } catch (error) {

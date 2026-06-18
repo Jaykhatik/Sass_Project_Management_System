@@ -19,7 +19,7 @@ export async function POST(
     // Validate the parent task exists and get its workspace info
     const parentTask = await prisma.task.findUnique({
       where: { id: taskId },
-      select: { workspaceId: true, projectId: true, boardId: true, columnId: true }
+      select: { workspaceId: true, projectId: true, boardId: true, columnId: true, assignees: true }
     });
 
     if (!parentTask) {
@@ -46,7 +46,13 @@ export async function POST(
         projectId: parentTask.projectId,
         boardId: parentTask.boardId,
         columnId: parentTask.columnId,
-        createdById: user.id
+        createdById: user.id,
+        assignees: {
+          create: parentTask.assignees.map((a: any) => ({
+            userId: a.userId,
+            assignedBy: user.id
+          }))
+        }
       }
     });
 

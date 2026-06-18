@@ -5,7 +5,9 @@ import { Task, Column } from "@/types";
 import { X, Loader2, ListTodo, Tag, ShieldAlert } from "lucide-react";
 import { updateTask, deleteTask, getTaskById, getAllTasks, createSubtask, addDependency } from "@/services/taskService";
 import { getAllMembers, getWorkspaceLabels } from "@/services/workspaceService";
+import { getCurrentUser } from "@/services/authService";
 import dynamic from "next/dynamic";
+import { TaskTimeline } from "./TaskTimeline";
 
 const MDEditor = dynamic(
   () => import("@uiw/react-md-editor").then((mod) => mod.default),
@@ -30,19 +32,25 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
   const [members, setMembers] = useState<any[]>([]);
   const [workspaceLabels, setWorkspaceLabels] = useState<any[]>([]);
   const [workspaceTasks, setWorkspaceTasks] = useState<Task[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     Promise.all([
       getTaskById(taskId, workspaceId),
       getAllMembers(workspaceId),
       getWorkspaceLabels(workspaceId),
-      getAllTasks(workspaceId)
-    ]).then(([taskData, membersData, labelsData, tasksData]) => {
+      getAllTasks(workspaceId),
+      getCurrentUser()
+    ]).then(([taskData, membersData, labelsData, tasksData, userData]) => {
       setTask(taskData);
       setMembers(membersData);
       setWorkspaceLabels(labelsData || []);
       setWorkspaceTasks(tasksData || []);
+      setCurrentUser(userData?.user);
       setLoading(false);
+    }).catch(err => {
+      alert("This task was not found or has been deleted.");
+      onClose();
     });
   }, [taskId, workspaceId]);
 
@@ -74,6 +82,7 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
 
   const handleUpdate = async (field: keyof Task, value: any) => {
     if (!task) return;
+    if (task[field] === value) return; // Prevent unnecessary API calls on blur
     setSaving(true);
     try {
       const updated = await updateTask(taskId, { [field]: value, workspaceId });
@@ -421,6 +430,14 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
               />
             </div>
           </div>
+          
+          {/* Timeline (Comments and Activity) */}
+          <TaskTimeline 
+            taskId={taskId} 
+            workspaceId={workspaceId} 
+            currentUser={currentUser}
+            members={members}
+          />
         </div>
       </div>
     </div>

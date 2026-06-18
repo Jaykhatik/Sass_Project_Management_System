@@ -6,6 +6,7 @@ export const WORKSPACE_API_ROUTES = {
   memberById: (workspaceId: string, userId: string) =>
     `/workspaces/${workspaceId}/members/${userId}`,
   labels: (workspaceId: string) => `/workspaces/${workspaceId}/labels`,
+  activity: (workspaceId: string) => `/workspaces/${workspaceId}/activity`,
 };
 
 export const PROJECT_API_ROUTES = {
@@ -18,6 +19,7 @@ export const AUTH_API_ROUTES = {
   register: "/auth/register",
   logout: "/auth/logout",
   refresh: "/auth/refresh",
+  me: "/auth/me",
 };
 
 export const TASK_API_ROUTES = {
@@ -26,6 +28,8 @@ export const TASK_API_ROUTES = {
   subtasks: (taskId: string) => `/tasks/${taskId}/subtasks`,
   dependencies: (taskId: string) => `/tasks/${taskId}/dependencies`,
   reorder: (boardId: string) => `/boards/${boardId}/tasks/reorder`,
+  comments: (taskId: string) => `/tasks/${taskId}/comments`,
+  commentById: (taskId: string, commentId: string) => `/tasks/${taskId}/comments/${commentId}`,
 };
 
 export const BOARD_API_ROUTES = {

@@ -25,6 +25,7 @@ const navLinks = [
   { name: "My Tasks", href: "/dashboard/tasks", icon: CheckSquare },
   { name: "Projects", href: "/dashboard/projects", icon: FolderKanban },
   { name: "Members", href: "/dashboard/members", icon: Users },
+  { name: "Activity Feed", href: "/dashboard/activity", icon: LayoutDashboard },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 

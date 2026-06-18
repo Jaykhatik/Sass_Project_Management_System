@@ -57,3 +57,18 @@ export const archiveProjectClient = async (
     throw new Error(error.response?.data?.error || "Failed to delete project");
   }
 };
+
+/**
+ * Fetches all projects for a given workspace from a client component.
+ * Used in: `src/app/(dashboard)/dashboard/activity/ActivityClient.tsx`
+ */
+export const getProjectsClient = async (workspaceId: string) => {
+  try {
+    const res = await axios.get(
+      `${API_BASE}${PROJECT_API_ROUTES.projects}?workspaceId=${workspaceId}`
+    );
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.error || "Failed to fetch projects");
+  }
+};

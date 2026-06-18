@@ -113,3 +113,29 @@ export interface Sprint {
   createdAt: string;
   tasks?: Task[];
 }
+
+export interface Comment {
+  id: string;
+  taskId: string;
+  workspaceId: string;
+  authorId: string;
+  content: string;
+  isEdited: boolean;
+  parentId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  author: User;
+}
+
+export interface ActivityLog {
+  id: string;
+  workspaceId: string;
+  actorId?: string | null;
+  entityType: string;
+  entityId: string;
+  action: string;
+  beforeData?: any;
+  afterData?: any;
+  createdAt: string;
+  actor?: User | null;
+}
