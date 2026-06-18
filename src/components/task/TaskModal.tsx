@@ -8,6 +8,7 @@ import { getAllMembers, getWorkspaceLabels } from "@/services/workspaceService";
 import { getCurrentUser } from "@/services/authService";
 import dynamic from "next/dynamic";
 import { TaskTimeline } from "./TaskTimeline";
+import TaskAttachments from "./TaskAttachments";
 
 const MDEditor = dynamic(
   () => import("@uiw/react-md-editor").then((mod) => mod.default),
@@ -431,6 +432,12 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
             </div>
           </div>
           
+          {/* Attachments Section */}
+          <TaskAttachments 
+            taskId={taskId} 
+            currentUser={currentUser} 
+          />
+
           {/* Timeline (Comments and Activity) */}
           <TaskTimeline 
             taskId={taskId} 

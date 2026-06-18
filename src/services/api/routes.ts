@@ -30,6 +30,8 @@ export const TASK_API_ROUTES = {
   reorder: (boardId: string) => `/boards/${boardId}/tasks/reorder`,
   comments: (taskId: string) => `/tasks/${taskId}/comments`,
   commentById: (taskId: string, commentId: string) => `/tasks/${taskId}/comments/${commentId}`,
+  attachments: (taskId: string) => `/tasks/${taskId}/attachments`,
+  attachmentById: (taskId: string, attachmentId: string) => `/tasks/${taskId}/attachments/${attachmentId}`,
 };
 
 export const BOARD_API_ROUTES = {

@@ -80,6 +80,7 @@ export interface Task {
   labels?: Label[];
   subTasks?: Task[];
   blockedBy?: { blockerTaskId: string }[];
+  attachments?: Attachment[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -125,6 +126,19 @@ export interface Comment {
   createdAt: string;
   updatedAt: string;
   author: User;
+}
+
+export interface Attachment {
+  id: string;
+  taskId: string;
+  workspaceId: string;
+  uploadedBy: string;
+  filename: string;
+  fileUrl: string;
+  fileSize?: number;
+  mimeType?: string;
+  createdAt: string;
+  uploader: User;
 }
 
 export interface ActivityLog {
