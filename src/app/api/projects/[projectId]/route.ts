@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { AppError } from "@/lib/errors";
+import { requireSessionUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -147,12 +148,14 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/projects/[projectId] — archives the project
+// DELETE /api/projects/[projectId] — permanently deletes the project (only owner)
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   try {
+    const user = await requireSessionUser();
+
     const { projectId } = await params;
     const { searchParams } = new URL(request.url);
     const workspaceId = searchParams.get("workspaceId");
@@ -164,15 +167,34 @@ export async function DELETE(
       );
     }
 
+    // Verify workspace ownership
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { ownerId: true },
+    });
+
+    if (!workspace) {
+      return NextResponse.json({ error: "Workspace not found", code: "NOT_FOUND" }, { status: 404 });
+    }
+
+    if (workspace.ownerId !== user.id) {
+      return NextResponse.json(
+        { error: "Only the workspace owner can delete projects", code: "FORBIDDEN" },
+        { status: 403 }
+      );
+    }
+
     const existing = await prisma.project.findFirst({ where: { id: projectId, workspaceId } });
     if (!existing) {
       return NextResponse.json({ error: "Project not found", code: "NOT_FOUND" }, { status: 404 });
     }
-    const project = await prisma.project.update({
+
+    // Delete project (Cascades to boards, columns, tasks)
+    await prisma.project.delete({
       where: { id: projectId },
-      data: { status: "archived" },
     });
-    return NextResponse.json(project);
+
+    return NextResponse.json({ success: true, message: "Project deleted permanently" });
   } catch (error: unknown) {
     if (error instanceof AppError) {
       return NextResponse.json(

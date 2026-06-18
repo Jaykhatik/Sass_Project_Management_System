@@ -19,7 +19,7 @@ const TABS = [
 
 type Tab = (typeof TABS)[number]["key"];
 
-export function ProjectDetailClient({ project }: { project: Project }) {
+export function ProjectDetailClient({ project, isOwner }: { project: Project, isOwner: boolean }) {
   const [activeTab, setActiveTab] = useState<Tab>("board");
   const defaultBoard = project.boards?.[0];
 
@@ -89,7 +89,7 @@ export function ProjectDetailClient({ project }: { project: Project }) {
             project={project}
           />
         )}
-        {activeTab === "settings" && <ProjectSettings project={project} />}
+        {activeTab === "settings" && <ProjectSettings project={project} isOwner={isOwner} />}
       </div>
     </div>
   );

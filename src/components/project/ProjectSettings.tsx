@@ -34,7 +34,7 @@ const COLORS = [
   "#06B6D4",
 ];
 
-export function ProjectSettings({ project }: { project: Project }) {
+export function ProjectSettings({ project, isOwner }: { project: Project, isOwner?: boolean }) {
   const [name, setName] = useState(project.projectInfo.name);
   const [description, setDescription] = useState(
     project.projectInfo.description ?? "",
@@ -74,7 +74,7 @@ export function ProjectSettings({ project }: { project: Project }) {
   };
 
   const handleArchive = async () => {
-    if (!confirm("Archive this project? It will be hidden from the main list."))
+    if (!confirm("Are you sure you want to permanently delete this project? All tasks, boards, and columns will be instantly destroyed. This cannot be undone."))
       return;
     setArchiving(true);
     try {
@@ -154,25 +154,26 @@ export function ProjectSettings({ project }: { project: Project }) {
       </form>
 
       {/* Danger Zone */}
-      <div className="border border-destructive/30 rounded-xl p-5 space-y-3 bg-destructive/5">
-        <h3 className="text-sm font-semibold text-destructive">Danger Zone</h3>
-        <p className="text-sm text-muted-foreground">
-          Archiving this project will hide it from the project list. Tasks will
-          not be deleted.
-        </p>
-        <button
-          onClick={handleArchive}
-          disabled={archiving}
-          className="flex items-center gap-2 border border-destructive/40 text-destructive px-3 py-1.5 rounded-md text-sm font-medium hover:bg-destructive/10 transition-colors disabled:opacity-50"
-        >
-          {archiving ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Archive className="w-4 h-4" />
-          )}
-          Archive Project
-        </button>
-      </div>
+      {isOwner && (
+        <div className="border border-destructive/30 rounded-xl p-5 space-y-3 bg-destructive/5">
+          <h3 className="text-sm font-semibold text-destructive">Danger Zone</h3>
+          <p className="text-sm text-muted-foreground">
+            Deleting this project will permanently erase all associated boards, columns, and tasks. This action cannot be undone.
+          </p>
+          <button
+            onClick={handleArchive}
+            disabled={archiving}
+            className="flex items-center gap-2 border border-destructive/40 text-destructive px-3 py-1.5 rounded-md text-sm font-medium hover:bg-destructive/10 transition-colors disabled:opacity-50"
+          >
+            {archiving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Archive className="w-4 h-4" />
+            )}
+            Delete Project Permanently
+          </button>
+        </div>
+      )}
     </div>
   );
 }

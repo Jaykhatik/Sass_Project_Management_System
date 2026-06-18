@@ -37,7 +37,10 @@ export default async function ProjectDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <ProjectDetailClient project={project as Parameters<typeof ProjectDetailClient>[0]["project"]} />
+      <ProjectDetailClient 
+        project={project as Parameters<typeof ProjectDetailClient>[0]["project"]} 
+        isOwner={workspace.ownerId === user.id}
+      />
     </div>
   );
 }

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUserWithRefresh } from "@/lib/auth";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ workspaceId: string }> }
 ) {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUserWithRefresh();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { workspaceId } = await params;
@@ -33,7 +33,7 @@ export async function PATCH(
   { params }: { params: Promise<{ workspaceId: string }> }
 ) {
   try {
-    const user = await getSessionUser();
+    const user = await getSessionUserWithRefresh();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { workspaceId } = await params;
