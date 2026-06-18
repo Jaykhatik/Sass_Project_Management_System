@@ -19,11 +19,9 @@ Authentication is intentionally last so the core product works and is testable b
 | 8     | Team Invitations & Onboarding | Secure invite links to grow the workspace           |
 | 9     | Sprints & Backlog             | Planning layer on top of tasks                      |
 | 10    | Comments & Activity           | Collaboration layer                                 |
-| 11    | File Attachments              | Storage integration                                 |
-| 12    | Notifications                 | Cross-cutting concern, needs tasks + comments first |
-| 13    | Dashboard & Analytics         | Aggregates data that now exists                     |
-| 14    | Billing & Plans               | Monetization after product is complete              |
-| 15    | Authentication & Auth Guards  | Wire up auth last, swap hardcoded user              |
+| 11    | File Attachments, Notifications, & Analytics | File uploads, real-time alerts, and data dashboards |
+| 12    | Billing & Plans               | Monetization after product is complete              |
+| 13    | Authentication & Auth Guards  | Wire up auth last, swap hardcoded user              |
 
 ---
 
@@ -218,7 +216,7 @@ Authentication is intentionally last so the core product works and is testable b
 
 ### Steps
 
-1. Create workspace service (`src/server/services/workspace.service.ts`)
+1. Create workspace service (`src/services/workspace.service.ts`)
    - `getWorkspace(slug)`
    - `updateWorkspace(id, data)`
    - `getMembers(workspaceId)`
@@ -226,9 +224,9 @@ Authentication is intentionally last so the core product works and is testable b
    - `updateMemberRole(workspaceId, userId, role)`
 
 2. Create API routes
-   - `GET/PATCH /api/v1/workspaces/[workspaceId]`
-   - `GET /api/v1/workspaces/[workspaceId]/members`
-   - `PATCH/DELETE /api/v1/workspaces/[workspaceId]/members/[userId]`
+   - `GET/PATCH /api/workspaces/[workspaceId]`
+   - `GET /api/workspaces/[workspaceId]/members`
+   - `PATCH/DELETE /api/workspaces/[workspaceId]/members/[userId]`
 
 3. Build Members page (`[workspace]/members/page.tsx`)
    - Member list with avatars, names, roles
@@ -260,13 +258,13 @@ Authentication is intentionally last so the core product works and is testable b
 
 ### Steps
 
-1. ✅ Create project service (`src/server/services/project.service.ts`)
+1. ✅ Create project service (`src/services/project.service.ts`)
    - `getProjects(workspaceId)`
    - `createProject(workspaceId, userId, data)` — auto-creates default board + 4 columns
    - `updateProject(workspaceId, id, data)`
    - `archiveProject(workspaceId, id)`
 
-2. ✅ Create board & column services (`src/server/services/board.service.ts`)
+2. ✅ Create board & column services (`src/services/board.service.ts`)
    - `getBoard(workspaceId, boardId)` — with columns + tasks
    - `createColumn(workspaceId, boardId, data)`
    - `updateColumn(workspaceId, id, data)`
@@ -314,7 +312,7 @@ Authentication is intentionally last so the core product works and is testable b
 
 ### Steps
 
-1. Create task service (`src/server/services/task.service.ts`)
+1. Create task service (`src/services/task.service.ts`)
    - `getTasks(workspaceId, filters)`
    - `getTask(workspaceId, taskId)` — full detail
    - `createTask(workspaceId, projectId, userId, data)`
@@ -379,7 +377,7 @@ Authentication is intentionally last so the core product works and is testable b
 2. Task dependencies
    - "Blocked by" relationship UI in task detail
    - Visual indicator on blocked tasks (blocked badge)
-   - API: `POST /api/v1/tasks/:id/dependencies`
+   - API: `POST /api/tasks/:id/dependencies`
 
 3. Labels management
    - Labels settings page under workspace settings
@@ -445,7 +443,7 @@ Authentication is intentionally last so the core product works and is testable b
 
 ### Steps
 
-1. Create sprint service (`src/server/services/sprint.service.ts`)
+1. Create sprint service (`src/services/sprint.service.ts`)
    - `getSprints(workspaceId, projectId)`
    - `createSprint(workspaceId, projectId, data)`
    - `startSprint(workspaceId, sprintId)`
@@ -487,7 +485,7 @@ Authentication is intentionally last so the core product works and is testable b
 
 ### Steps
 
-1. Create comment service (`src/server/services/comment.service.ts`)
+1. Create comment service (`src/services/comment.service.ts`)
    - `getComments(workspaceId, taskId)`
    - `createComment(workspaceId, taskId, userId, content)`
    - `updateComment(workspaceId, commentId, userId, content)`
@@ -527,23 +525,25 @@ Authentication is intentionally last so the core product works and is testable b
 
 ---
 
-## Phase 11 — File Attachments
+## Phase 11 — File Attachments, Notifications, & Analytics (Advanced Features)
 
-**Goal:** Upload and manage files attached to tasks.
+**Goal:** Upload files, real-time in-app notifications, and a comprehensive dashboard.
+
+### Part 1 — File Attachments
 
 ### Steps
 
-1. Set up S3/R2 client (`src/lib/s3.ts`)
-   - Presigned URL generation for uploads
-   - Delete object helper
+1. Set up Local File Upload utility (`src/lib/upload.ts` or similar)
+   - Save files directly to the `public/files` directory
+   - Generate unique filenames to prevent collisions
 
 2. Create attachment service
    - `createAttachment(workspaceId, taskId, userId, fileData)`
    - `deleteAttachment(workspaceId, attachmentId, userId)`
 
 3. Create API routes
-   - `POST /api/v1/tasks/:taskId/attachments` — returns presigned URL
-   - `DELETE /api/v1/attachments/:id`
+   - `POST /api/tasks/:taskId/attachments` — saves file to `public` folder and creates DB record
+   - `DELETE /api/attachments/:id`
 
 4. Build file upload UI in Task Detail
    - Drag-and-drop upload zone
@@ -557,63 +557,43 @@ Authentication is intentionally last so the core product works and is testable b
 
 ### ✅ Done When
 
-- Files upload to S3/R2
+- Files upload locally to the `public/files` folder
 - Attachments appear in task detail
 - Files can be downloaded and deleted
 
 ---
 
-## Phase 12 — Notifications
+### Part 2 — Notifications
 
 **Goal:** In-app notifications for assignments, mentions, comments. No Redis — polling via RTK Query.
 
 ### Steps
 
-1. Create notification service
-   - `createNotification(workspaceId, userId, type, title, body, data)`
-   - `getNotifications(userId, unreadOnly)`
-   - `markAsRead(userId, notificationIds)`
-   - `markAllAsRead(userId)`
+1. Create notification service (`src/services/notificationService.ts`)
+   - `getNotifications(workspaceId)`
+   - `markAsRead(workspaceId, notificationId)`
+   - `markAllAsRead(workspaceId)`
+   - `deleteNotification(workspaceId, notificationId)`
 
 2. Wire up notification creation in other services
    - Task assigned → notify assignees
    - Comment added → notify task creator + assignees
    - @mention → notify mentioned user
-   - Sprint started → notify project members
 
 3. Create API routes for notifications
+   - `GET /api/workspaces/:id/notifications`
+   - `PATCH /api/workspaces/:id/notifications` (Mark all read)
+   - `PATCH /api/workspaces/:id/notifications/:notifId` (Mark read)
+   - `DELETE /api/workspaces/:id/notifications/:notifId` (Delete)
 
 4. Build notification bell in Header
    - Unread count badge
    - Dropdown list of recent notifications
    - Click navigates to the relevant task
+   - Delete/Archive old notifications from the dropdown
 
-5. Set up polling with RTK Query
-
-   ```typescript
-   // src/store/api/notificationsApi.ts
-   export const notificationsApi = createApi({
-     reducerPath: "notificationsApi",
-     baseQuery: fetchBaseQuery({ baseUrl: "/api/v1" }),
-     endpoints: (builder) => ({
-       getNotifications: builder.query<Notification[], void>({
-         query: () => "/notifications",
-         // poll every 30 seconds
-         keepUnusedDataFor: 0,
-       }),
-     }),
-   });
-
-   // In component:
-   const { data } = useGetNotificationsQuery(undefined, {
-     pollingInterval: 30_000,
-   });
-   ```
-
-6. Build Notifications page (`[workspace]/notifications/page.tsx`)
-   - Full list with read/unread state
-   - Mark all as read button
-   - Filter by type
+5. Set up polling
+   - Use standard React `useEffect` and `setInterval` to poll the API every 30 seconds instead of RTK Query.
 
 ### ✅ Done When
 
@@ -623,38 +603,24 @@ Authentication is intentionally last so the core product works and is testable b
 
 ---
 
-## Phase 13 — Dashboard & Analytics
+### Part 3 — Dashboard & Analytics
 
 **Goal:** A useful homepage with real data — progress, workload, recent activity.
 
 ### Steps
 
-1. Build workspace dashboard (`[workspace]/page.tsx`)
-   - Welcome card with user name
-   - "My open tasks" summary (count by priority)
-   - Recent activity feed (last 10 events)
-   - Projects overview (status + progress bars)
+1. Build workspace Analytics route (`/api/workspaces/[id]/analytics`)
+   - Aggregates tasks by status, priority, and assigns.
+   - Calculates total members minus workspace owner.
 
-2. Build Stats cards
-   - Total tasks / completed this week
-   - Active sprints
-   - Team members online (last seen)
+2. Build Analytics Client (`[workspace]/analytics/AnalyticsClient.tsx`)
+   - Stats cards: Total Projects, Total Tasks, Team Members, Completion Rate.
+   - Task Status Distribution: Radial Bar Chart (Recharts)
+   - Task Priority Distribution: Horizontal Bar Chart (Recharts)
+   - Member Workload & Velocity: Overlapping Area Chart (Recharts)
 
-3. Build Task Completion trend chart (Recharts)
-   - Last 30 days: tasks created vs completed per day
-   - Line chart
-
-4. Build Member Workload chart
-   - Bar chart: tasks assigned per member
-   - Helps identify overloaded/underloaded members
-
-5. Build Project Progress overview
-   - List of active projects
-   - Progress bar: done tasks / total tasks
-   - Sprint status
-
-6. Add query for "overdue tasks" (due_date < now and status != done)
-   - Warning section on dashboard
+3. Integrate to Sidebar
+   - Add "Analytics" tab to left navigation.
 
 ### ✅ Done When
 
@@ -664,7 +630,7 @@ Authentication is intentionally last so the core product works and is testable b
 
 ---
 
-## Phase 14 — Billing & Plans
+## Phase 12 — Billing & Plans
 
 **Goal:** Stripe checkout, plan enforcement, subscription management.
 
@@ -678,7 +644,7 @@ Authentication is intentionally last so the core product works and is testable b
 
 2. Create `src/lib/stripe.ts` — Stripe client singleton
 
-3. Create billing service (`src/server/services/billing.service.ts`)
+3. Create billing service (`src/services/billing.service.ts`)
    - `createCheckoutSession(workspaceId, plan, seats, userId)`
    - `createPortalSession(workspaceId)`
    - `getCurrentSubscription(workspaceId)`
@@ -719,7 +685,7 @@ Authentication is intentionally last so the core product works and is testable b
 
 ---
 
-## Phase 15 — Authentication (Last)
+## Phase 13 — Authentication (Last)
 
 **Goal:** Replace the hardcoded seed user with real authentication. Add all auth flows and route guards.
 
