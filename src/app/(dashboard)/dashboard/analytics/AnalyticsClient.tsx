@@ -13,6 +13,14 @@ const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 export function AnalyticsClient({ workspaceId }: { workspaceId: string }) {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -98,7 +106,7 @@ export function AnalyticsClient({ workspaceId }: { workspaceId: string }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Task Status Donut */}
-        <div className="bg-card border rounded-xl p-6 shadow-sm">
+        <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
           <h3 className="font-semibold mb-6 flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-indigo-500" />
             Task Status Distribution
@@ -132,18 +140,18 @@ export function AnalyticsClient({ workspaceId }: { workspaceId: string }) {
         </div>
 
         {/* Task Priority Donut */}
-        <div className="bg-card border rounded-xl p-6 shadow-sm">
+        <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm">
           <h3 className="font-semibold mb-6 flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-emerald-500" />
             Task Priority Distribution
           </h3>
-          <div className="h-[300px] w-full">
+          <div className="h-[300px] w-full -ml-2 sm:ml-0">
             {tasksByPriority.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={tasksByPriority}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                  barSize={40}
+                  margin={isMobile ? { top: 10, right: 20, left: 0, bottom: 0 } : { top: 20, right: 30, left: 20, bottom: 5 }}
+                  barSize={isMobile ? 25 : 40}
                   layout="vertical"
                 >
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
@@ -158,9 +166,9 @@ export function AnalyticsClient({ workspaceId }: { workspaceId: string }) {
                     dataKey="name" 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: 'hsl(var(--foreground))', fontSize: 13, fontWeight: 500 }}
+                    tick={{ fill: 'hsl(var(--foreground))', fontSize: isMobile ? 11 : 13, fontWeight: 500 }}
                     tickFormatter={(value) => value.charAt(0).toUpperCase() + value.slice(1).replace('_', ' ')}
-                    width={90}
+                    width={isMobile ? 60 : 90}
                   />
                   <RechartsTooltip 
                     cursor={{ fill: 'hsl(var(--muted))', opacity: 0.2 }}
@@ -181,17 +189,17 @@ export function AnalyticsClient({ workspaceId }: { workspaceId: string }) {
         </div>
 
         {/* Member Workload Bar Chart */}
-        <div className="bg-card border rounded-xl p-6 shadow-sm lg:col-span-2">
-          <h3 className="font-semibold mb-6 flex items-center gap-2">
+        <div className="bg-card border rounded-xl p-4 sm:p-6 shadow-sm lg:col-span-2">
+          <h3 className="font-semibold mb-6  flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-orange-500" />
             Member Workload & Velocity
           </h3>
-          <div className="h-[350px] w-full">
+          <div className="h-[350px] w-full -ml-4 sm:ml-0">
             {workloadChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={workloadChartData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  margin={isMobile ? { top: 10, right: 10, left: -20, bottom: 0 } : { top: 20, right: 30, left: 20, bottom: 5 }}
                 >
                   <defs>
                     <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
@@ -208,7 +216,7 @@ export function AnalyticsClient({ workspaceId }: { workspaceId: string }) {
                     dataKey="name" 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: isMobile ? 10 : 12 }}
                     dy={10}
                   />
                   <YAxis 
@@ -220,7 +228,7 @@ export function AnalyticsClient({ workspaceId }: { workspaceId: string }) {
                   <RechartsTooltip 
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
                   />
-                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                  <Legend wrapperStyle={{ paddingTop: '20px', display:'flex',justifyContent:'center',marginInlineStart:'40px' }} />
                   <Area type="monotone" dataKey="active" name="Active Tasks" stroke="#6366f1" fillOpacity={1} fill="url(#colorActive)" />
                   <Area type="monotone" dataKey="completed" name="Completed Tasks" stroke="#10b981" fillOpacity={1} fill="url(#colorCompleted)" />
                 </AreaChart>
