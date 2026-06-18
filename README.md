@@ -17,16 +17,19 @@ Multiple completely separate companies (called **tenants**) can each have their 
 ### 🧱 The 4 Core Building Blocks
 
 #### 1. The Database (PostgreSQL + Prisma)
+
 The filing cabinet. Everything is stored here — users, teams, projects, tasks, comments, files.
 
-Every single piece of data has a `workspaceId` stamp on it (like a Post-it note saying *"this belongs to Acme Corp only"*). Even if a hacker tried to fetch someone else's task by guessing its ID, the query would fail because the `workspaceId` wouldn't match.
+Every single piece of data has a `workspaceId` stamp on it (like a Post-it note saying _"this belongs to Acme Corp only"_). Even if a hacker tried to fetch someone else's task by guessing its ID, the query would fail because the `workspaceId` wouldn't match.
 
 ```
 User signs up → creates a Workspace → invites Members → creates Projects → creates Tasks
 ```
 
 #### 2. The Backend (Next.js API Routes + Service Layer)
+
 When the browser needs data, it calls an API like `GET /api/v1/workspaces/123/tasks`. The API layer:
+
 - Checks: **Are you logged in?**
 - Checks: **Are you a member of this workspace?**
 - Calls the **Service Layer** (business logic) to fetch data from Prisma
@@ -35,14 +38,18 @@ When the browser needs data, it calls an API like `GET /api/v1/workspaces/123/ta
 The Service Layer is the middleman — API routes handle HTTP, services handle "what actually happens."
 
 #### 3. The Frontend (Next.js Pages + React + Redux)
+
 The browser receives data and displays it. Split into two types:
+
 - **Server Components** — run on the server, fetch data from Prisma directly, send finished HTML. Fast and secure.
 - **Client Components** — run in the browser, handle clicks, animations, drag-and-drop. Need `'use client'` at the top.
 
 **Redux** acts as shared memory between UI parts. For example, clicking the hamburger button in the Header tells the Sidebar to open — even though they are completely separate components.
 
 #### 4. The Auth System (NextAuth.js)
+
 Before seeing anything, users must log in. Login options:
+
 - **Email + Password** (must verify email first)
 - **Google OAuth**
 - **GitHub OAuth**
@@ -82,12 +89,18 @@ A user visits `https://app.example.com/acme-corp/projects`:
 
 ### 💳 How Money Works (Stripe Billing)
 
-3 plans: **Free**, **Pro** ($12/seat/mo), **Business** ($24/seat/mo).
+2 plans: **Free** and **Pro** ($10/mo flat rate).
+
+**Free Plan Guardrails:**
+
+- Maximum 3 Projects
+- Maximum 5 Team Members
 
 When a workspace owner upgrades:
+
 1. Our server creates a **Stripe Checkout session** → redirects user to Stripe
 2. User pays securely on Stripe's page
-3. Stripe fires a **webhook** to our server: *"Payment completed!"*
+3. Stripe fires a **webhook** to our server: _"Payment completed!"_
 4. Our server updates the `subscriptions` table in PostgreSQL
 5. Plan limits instantly expand
 
@@ -101,12 +114,12 @@ When the Free plan limit (3 projects) is hit → the service throws a `PlanLimit
 
 **Roles inside a workspace:**
 
-| Role | What They Can Do |
-|---|---|
-| `owner` | Full control, billing, delete workspace |
-| `admin` | Manage members and settings |
-| `member` | Create and edit tasks/projects |
-| `guest` | Read-only — can view but not change anything |
+| Role     | What They Can Do                             |
+| -------- | -------------------------------------------- |
+| `owner`  | Full control, billing, delete workspace      |
+| `admin`  | Manage members and settings                  |
+| `member` | Create and edit tasks/projects               |
+| `guest`  | Read-only — can view but not change anything |
 
 ---
 
@@ -156,28 +169,33 @@ All data stays in PostgreSQL — no Redis needed
 ## ⚡ Quick Start
 
 ### Prerequisites
+
 - Node.js 20+
 - PostgreSQL 15+
 - npm or pnpm
 
 ### 1. Install dependencies
+
 ```bash
 npm install
 ```
 
 ### 2. Set up environment variables
+
 ```bash
 cp Saas_Project_Management_System_Readme/.env.example .env.local
 # Fill in DATABASE_URL, NEXTAUTH_SECRET, etc.
 ```
 
 ### 3. Set up the database
+
 ```bash
 npx prisma migrate dev --name init   # Create all tables
 npx prisma db seed                   # Fill with demo data
 ```
 
 ### 4. Run the development server
+
 ```bash
 npm run dev
 ```
@@ -188,21 +206,21 @@ Open [http://localhost:3000](http://localhost:3000) — it redirects to `/dashbo
 
 ## 📁 Key Files to Know
 
-| File | What It Does |
-|---|---|
-| `prisma/schema.prisma` | All 17 database table definitions |
-| `prisma/seed.ts` | Demo data (users, workspace, tasks) |
-| `prisma.config.ts` | Database connection config (Prisma v7) |
-| `src/app/layout.tsx` | Root HTML wrapper, Redux Provider |
-| `src/app/(dashboard)/dashboard/layout.tsx` | Dashboard shell (Sidebar + Header) |
-| `src/app/(dashboard)/dashboard/page.tsx` | Dashboard home page |
-| `src/components/shared/Sidebar.tsx` | Sidebar with nav, logout, mobile drawer |
-| `src/components/shared/Header.tsx` | Top header with search and hamburger |
-| `src/store/index.ts` | Redux store setup |
-| `src/store/slices/uiSlice.ts` | UI state (sidebar open/closed, theme) |
-| `src/store/slices/workspaceSlice.ts` | Current workspace state |
-| `src/lib/prisma.ts` | Prisma client singleton |
-| `src/lib/errors.ts` | Custom error classes (NotFoundError, etc.) |
+| File                                       | What It Does                               |
+| ------------------------------------------ | ------------------------------------------ |
+| `prisma/schema.prisma`                     | All 17 database table definitions          |
+| `prisma/seed.ts`                           | Demo data (users, workspace, tasks)        |
+| `prisma.config.ts`                         | Database connection config (Prisma v7)     |
+| `src/app/layout.tsx`                       | Root HTML wrapper, Redux Provider          |
+| `src/app/(dashboard)/dashboard/layout.tsx` | Dashboard shell (Sidebar + Header)         |
+| `src/app/(dashboard)/dashboard/page.tsx`   | Dashboard home page                        |
+| `src/components/shared/Sidebar.tsx`        | Sidebar with nav, logout, mobile drawer    |
+| `src/components/shared/Header.tsx`         | Top header with search and hamburger       |
+| `src/store/index.ts`                       | Redux store setup                          |
+| `src/store/slices/uiSlice.ts`              | UI state (sidebar open/closed, theme)      |
+| `src/store/slices/workspaceSlice.ts`       | Current workspace state                    |
+| `src/lib/prisma.ts`                        | Prisma client singleton                    |
+| `src/lib/errors.ts`                        | Custom error classes (NotFoundError, etc.) |
 
 ---
 
@@ -210,61 +228,69 @@ Open [http://localhost:3000](http://localhost:3000) — it redirects to `/dashbo
 
 All detailed docs are in `Saas_Project_Management_System_Readme/`:
 
-| File | Topic |
-|---|---|
-| `README.md` | Full technical overview |
-| `PHASES.md` | Development roadmap (all phases) |
-| `DATABASE.md` | Full schema and ERD |
-| `API.md` | Complete API reference |
-| `AUTH.md` | Authentication flows |
-| `MULTI_TENANCY.md` | How tenant isolation works |
-| `BILLING.md` | Stripe integration guide |
-| `DEPLOYMENT.md` | Production deployment guide |
-| `CONTRIBUTING.md` | Developer guide and code standards |
+| File               | Topic                              |
+| ------------------ | ---------------------------------- |
+| `README.md`        | Full technical overview            |
+| `PHASES.md`        | Development roadmap (all phases)   |
+| `DATABASE.md`      | Full schema and ERD                |
+| `API.md`           | Complete API reference             |
+| `AUTH.md`          | Authentication flows               |
+| `MULTI_TENANCY.md` | How tenant isolation works         |
+| `BILLING.md`       | Stripe integration guide           |
+| `DEPLOYMENT.md`    | Production deployment guide        |
+| `CONTRIBUTING.md`  | Developer guide and code standards |
 
 Phase-specific READMEs are in `Packages_Readme_files_EXPLANATIONS/PHASES_README_FILES/`:
 
-| File | Topic |
-|---|---|
-| `PHASE2-DATABASE-PRISMA.md` | How Prisma, models, migrations, and seeding work |
-| `PHASE3-UI-SHELL-LAYOUT.md` | How routing, layouts, Redux, and the sidebar work |
+| File                              | Topic                                           |
+| --------------------------------- | ----------------------------------------------- |
+| `PHASE2-DATABASE-PRISMA.md`       | Database models, migrations, and seeding        |
+| `PHASE3-UI-SHELL-LAYOUT.md`       | Routing, layouts, Redux, and sidebar            |
+| `PHASE4-WORKSPACE-MANAGEMENT.md`  | Workspace creation, settings, and UI            |
+| `PHASE5-PROJECTS-AND-BOARDS.md`   | Project CRUD, routing, and UI                   |
+| `PHASE6-TASK-MANAGEMENT.md`       | Kanban board, columns, drag-and-drop            |
+| `PHASE7-ADVANCED-TASKS.md`        | Task details, description editor, UI polish     |
+| `PHASE8-TEAM-INVITATIONS.md`      | Email invites, JWT tokens, member roles         |
+| `PHASE9-SPRINTS.md`               | Sprint planning, burndown charts                |
+| `PHASE10-ACTIVITY-COMMENTS.md`    | Task comments, @mentions, activity logs         |
+| `PHASE11-ADVANCED-FEATURES.md`    | Global search, complex filtering                |
+| `PHASE12-STRIPE_BILLING_GUIDE.md` | Stripe checkout, webhooks, free tier guardrails |
 
 ---
 
 ## 🛠 Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript |
-| Database | PostgreSQL |
-| ORM | Prisma v7 |
-| Auth | NextAuth.js v5 (coming in Phase 14) |
-| Styling | Tailwind CSS + shadcn/ui |
-| State | Redux Toolkit |
+| Layer        | Technology                            |
+| ------------ | ------------------------------------- |
+| Framework    | Next.js 16 (App Router)               |
+| Language     | TypeScript                            |
+| Database     | PostgreSQL                            |
+| ORM          | Prisma v7                             |
+| Auth         | NextAuth.js v5 (coming in Phase 14)   |
+| Styling      | Tailwind CSS + shadcn/ui              |
+| State        | Redux Toolkit                         |
 | File Storage | AWS S3 / Cloudflare R2 (coming later) |
-| Email | Resend (coming later) |
-| Payments | Stripe (coming later) |
-| Deployment | Vercel / Docker |
+| Email        | Resend (coming later)                 |
+| Payments     | Stripe (coming later)                 |
+| Deployment   | Vercel / Docker                       |
 
 ---
 
 ## 📋 Development Progress
 
-| Phase | Description | Status |
-|---|---|---|
-| 1 | Project Setup & Tooling | ✅ Complete |
-| 2 | Database Schema & Prisma | ✅ Complete |
-| 3 | Core UI Shell & Layout | ✅ Complete |
-| 4 | Workspace Management | 🔄 Next |
-| 5 | Project Management | ⬜ Pending |
-| 6 | Kanban Board | ⬜ Pending |
-| 7 | Task Management | ⬜ Pending |
-| 8 | Sprint Management | ⬜ Pending |
-| 9 | Comments & Attachments | ⬜ Pending |
-| 10 | Notifications | ⬜ Pending |
-| 11 | Search | ⬜ Pending |
-| 12 | Analytics & Dashboards | ⬜ Pending |
-| 13 | Billing (Stripe) | ⬜ Pending |
-| 14 | Authentication | ⬜ Pending |
-| 15 | Deployment | ⬜ Pending |
+| Phase | Description                                    | Status      |
+| ----- | ---------------------------------------------- | ----------- |
+| 1     | Project Setup & Tooling                        | ✅ Complete |
+| 2     | Database Schema & Prisma                       | ✅ Complete |
+| 3     | Core UI Shell & Layout                         | ✅ Complete |
+| 4     | Workspace Management                           | ✅ Complete |
+| 5     | Project Management & Boards                    | ✅ Complete |
+| 6     | Task Management (Kanban)                       | ✅ Complete |
+| 7     | Advanced Tasks (Rich Text)                     | ✅ Complete |
+| 8     | Team Invitations & Roles                       | ✅ Complete |
+| 9     | Sprints & Burndown Charts                      | ✅ Complete |
+| 10    | Activity Logs & Comments                       | ✅ Complete |
+| 11    | Advanced Features (Search, Notifications, etc) | ✅ Complete |
+| 12    | Billing & Monetization (Stripe)                | ✅ Complete |
+| 13    | Authentication & Security                      | 🔄 Next     |
+| 14    | Final Polish & Deployment                      | ⬜ Pending  |
