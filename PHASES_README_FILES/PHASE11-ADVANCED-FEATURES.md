@@ -217,6 +217,61 @@ Just like Option 1, ensure you have copied your `session` cookie from the browse
 - **Method:** `DELETE`
 - **Result:** You will receive a `200 OK` with `{ "success": true }`. If you try to run it again, you will receive a `403 Forbidden or Not Found` error.
 
+---
+
+## Option 3: Global "Cmd+K" Command Menu & Search 🔍
+
+### What Option 3 Does
+
+- Introduces a MacOS Spotlight-style global search overlay that intercepts the `Cmd+K` (Mac) or `Ctrl+K` (Windows) keyboard shortcut from anywhere in the app.
+- Builds a unified `/search` backend API that performs a single, high-performance database query across Tasks, Projects, and Workspace Members using case-insensitive partial matching.
+- Implements a `useDebounce` custom React hook to prevent backend spamming while typing.
+- Provides true "Power User" keyboard navigation, allowing users to scroll through search results using the `ArrowUp` and `ArrowDown` keys.
+- Implements quick-action deep linking. Pressing `Enter` on a Task immediately routes the user to `My Tasks` and auto-opens the Task Modal. Pressing `Enter` on a Project jumps straight to its Kanban board.
+
+## Files Created & Modified for Option 3
+
+| File | Purpose |
+|---|---|
+| `src/app/api/workspaces/[workspaceId]/search/route.ts` | The unified backend search endpoint that queries Prisma for matching tasks, projects, and members. |
+| `src/services/searchService.ts` | The frontend service layer for executing the search query. |
+| `src/hooks/useDebounce.ts` | Custom React hook to delay search execution by 300ms until the user stops typing. |
+| `src/components/shared/CommandMenu.tsx` | The gorgeous, glassmorphic UI overlay containing the search logic, keyboard listeners, and result mapping. |
+| `src/components/shared/Header.tsx` | Modified to render the `<CommandMenu />` and turn the fake search input into a clickable trigger button. |
+
+## Option 3 API Table
+
+| Method | Route | What it does | Request body | Returns |
+|---|---|---|---|---|
+| `GET` | `/api/workspaces/[id]/search?q=query` | Searches tasks, projects, members | `q` query parameter | JSON object with `{ tasks: [], projects: [], members: [] }` |
+
+## How to Test Option 3 (Frontend)
+
+**Step 1: Open the Menu**
+1. Press `Cmd + K` (Mac) or `Ctrl + K` (Windows) on your keyboard, OR click the Search Bar in the top navigation header.
+2. The background will blur and the search modal will appear.
+
+**Step 2: Test Live Search**
+1. Type a word that exists in a task title, project name, or user email. 
+2. Wait 300ms. A loading spinner will flash briefly, and results will populate categorized by type (Tasks, Projects, Members).
+3. Try searching for complete gibberish to verify the "No results found" empty state appears.
+
+**Step 3: Test Keyboard Navigation & Deep Linking**
+1. Search for something with multiple results.
+2. Without using your mouse, press the `Down Arrow` key to highlight the first result in blue. Continue pressing down to scroll through the list.
+3. Highlight a **Task** and press `Enter`. The menu will vanish, and you will be instantly routed to the `My Tasks` page with the Task Modal open!
+4. Highlight a **Project** and press `Enter`. You will instantly jump to the Project's Kanban board!
+5. To close the menu without selecting anything, simply press `Esc` or click outside the modal.
+
+## How to Test Option 3 (Backend via Postman)
+
+Ensure your Postman client has the `session` cookie configured as described in Option 1.
+
+### Step 1: Test Global Search Endpoint (GET)
+- **URL:** `http://localhost:3000/api/workspaces/YOUR_WORKSPACE_ID/search?q=YOUR_SEARCH_TERM`
+- **Method:** `GET`
+- **Result:** You will receive a JSON response containing three arrays: `tasks`, `projects`, and `members`. Only records matching your search term will be populated. If no matches are found, it gracefully returns empty arrays.
+
 ## Future Enhancements (Phase 11+)
 
 - **Activity Feed Integration for New Members:** Currently, when a user accepts an invitation and joins the workspace, a notification is sent directly to the Workspace Owner. In the future, we should also write a `"member_added"` event to the global `ActivityLog` so that it appears in the public Activity Feed for all members to see.

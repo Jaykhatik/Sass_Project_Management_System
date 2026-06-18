@@ -7,11 +7,12 @@ import { useDispatch } from 'react-redux';
 import { toggleSidebar } from '@/store/slices/uiSlice';
 import { logout } from '@/services/authService';
 import { NotificationBell } from './NotificationBell';
+import { CommandMenu } from './CommandMenu';
 
 export function Header({ workspaceId }: { workspaceId: string }) {
   const dispatch = useDispatch();
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -23,12 +24,7 @@ export function Header({ workspaceId }: { workspaceId: string }) {
     router.refresh();
   };
 
-  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && searchQuery.trim()) {
-      router.push(`/dashboard/tasks?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery("");
-    }
-  };
+
 
   return (
     <header className="h-16 border-b border-border/40 bg-background/80 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 sticky top-0 z-10 gap-4">
@@ -41,20 +37,18 @@ export function Header({ workspaceId }: { workspaceId: string }) {
         >
           <Menu className="w-5 h-5" />
         </button>
-        {/* Search Bar */}
-        <div className="relative w-full max-w-md group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-          <input 
-            type="text" 
-            placeholder="Search tasks..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={handleSearch}
-            className="w-full h-9 sm:h-10 pl-9 sm:pl-10 pr-4 rounded-full border border-border/50 bg-muted/40 hover:bg-muted/80 focus:bg-background focus:ring-2 focus:ring-primary/40 focus:border-primary/50 focus:outline-none transition-all text-xs sm:text-sm shadow-sm"
-          />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex gap-1">
-            <kbd className="text-[10px] bg-background/80 px-1.5 py-0.5 rounded border border-border/50 text-muted-foreground font-mono shadow-sm">⌘</kbd>
-            <kbd className="text-[10px] bg-background/80 px-1.5 py-0.5 rounded border border-border/50 text-muted-foreground font-mono shadow-sm">K</kbd>
+        {/* Global Search Trigger */}
+        <div 
+          className="relative w-full max-w-md group cursor-pointer"
+          onClick={() => setIsCommandMenuOpen(true)}
+        >
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          <div className="w-full h-9 sm:h-10 pl-9 sm:pl-10 pr-4 rounded-full border border-border/50 bg-muted/40 group-hover:bg-muted/80 transition-all text-xs sm:text-sm shadow-sm flex items-center justify-between text-muted-foreground">
+            <span>Search tasks, projects, members...</span>
+            <div className="hidden sm:flex gap-1">
+              <kbd className="text-[10px] bg-background/80 px-1.5 py-0.5 rounded border border-border/50 text-muted-foreground font-mono shadow-sm">⌘</kbd>
+              <kbd className="text-[10px] bg-background/80 px-1.5 py-0.5 rounded border border-border/50 text-muted-foreground font-mono shadow-sm">K</kbd>
+            </div>
           </div>
         </div>
       </div>
@@ -71,6 +65,12 @@ export function Header({ workspaceId }: { workspaceId: string }) {
           <span className="hidden sm:inline">Logout</span>
         </button>
       </div>
+
+      <CommandMenu 
+        workspaceId={workspaceId} 
+        isOpen={isCommandMenuOpen} 
+        setIsOpen={setIsCommandMenuOpen} 
+      />
     </header>
   );
 }
