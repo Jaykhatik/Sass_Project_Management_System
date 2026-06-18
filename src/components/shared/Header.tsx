@@ -2,12 +2,13 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Bell, Menu, LogOut } from 'lucide-react';
+import { Search, Menu, LogOut } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { toggleSidebar } from '@/store/slices/uiSlice';
 import { logout } from '@/services/authService';
+import { NotificationBell } from './NotificationBell';
 
-export function Header() {
+export function Header({ workspaceId }: { workspaceId: string }) {
   const dispatch = useDispatch();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
@@ -59,10 +60,7 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-        <button className="p-2 sm:p-2.5 text-muted-foreground hover:text-foreground bg-muted/30 hover:bg-muted/60 border border-transparent hover:border-border/50 rounded-full transition-all relative" suppressHydrationWarning>
-          <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-background animate-pulse"></span>
-        </button>
+        <NotificationBell workspaceId={workspaceId} />
 
         <button
           onClick={handleLogout}

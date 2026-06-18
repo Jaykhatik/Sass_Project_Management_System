@@ -113,6 +113,14 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
 
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
+  const taskIdParam = searchParams.get("taskId");
+
+  useEffect(() => {
+    if (taskIdParam) {
+      setSelectedTaskId(taskIdParam);
+    }
+  }, [taskIdParam]);
+
   useEffect(() => {
     fetchTasks();
   }, [workspaceId, userId, viewMode]);

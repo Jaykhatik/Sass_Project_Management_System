@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSessionUserWithRefresh } from "@/lib/auth";
 import { logActivity } from "@/lib/activityLogger";
+import { notifyUser } from "@/lib/notificationService";
 
 export async function GET(request: Request, { params }: { params: Promise<{ taskId: string }> }) {
   try {
@@ -90,6 +91,27 @@ export async function POST(request: Request, { params }: { params: Promise<{ tas
       null,
       { commentId: comment.id, content: content.substring(0, 50) }
     );
+
+    // Process Mentions
+    const allMembers = await prisma.workspaceMember.findMany({
+      where: { workspaceId },
+      include: { user: { select: { id: true, name: true } } }
+    });
+
+    const mentionedMembers = allMembers.filter(m => m.user.name && content.includes(`@${m.user.name}`));
+
+    for (const m of mentionedMembers) {
+      if (m.user.id !== user.id) {
+        await notifyUser({
+          workspaceId,
+          userId: m.user.id,
+          type: "mention",
+          title: `${user.name} mentioned you in a comment`,
+          body: content.substring(0, 100),
+          data: { taskId, commentId: comment.id }
+        });
+      }
+    }
 
     return NextResponse.json(comment, { status: 201 });
   } catch (error: any) {

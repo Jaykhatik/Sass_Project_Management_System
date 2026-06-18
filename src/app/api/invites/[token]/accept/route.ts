@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
+import { notifyUser } from "@/lib/notificationService";
 
 export async function POST(
   request: Request,
@@ -58,6 +59,15 @@ export async function POST(
 
       // 2. We can either mark as accepted or delete. Let's delete to burn the token.
       await tx.invitation.delete({ where: { id: invite.id } });
+    });
+
+    // Notify the workspace owner that a member joined
+    await notifyUser({
+      workspaceId: invite.workspaceId,
+      userId: invite.workspace.ownerId,
+      type: "member_added",
+      title: `${user.name || user.email} joined the workspace`,
+      data: { userId: user.id }
     });
 
     return NextResponse.json({ success: true, workspaceId: invite.workspaceId });

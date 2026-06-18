@@ -133,3 +133,90 @@ Because the app is secured with `HttpOnly` cookies, you must authenticate your P
 - **Result:** 
   - If you are the uploader or workspace owner, returns `{ "success": true }`.
   - If you are a normal member deleting someone else's file, returns `403 Forbidden`.
+
+---
+
+## Option 2: Real-Time Notification Engine
+
+### What Option 2 Does
+
+- Introduces a robust real-time notification system to keep users engaged.
+- Triggers notifications dynamically during specific backend actions (e.g., when a user is mentioned in a comment, assigned a new task, or joins a workspace).
+- Builds a stunning `NotificationBell` component for the global navigation bar featuring an animated red pulsing badge for unread alerts.
+- Features deep-linking: Clicking a task-related notification routes the user instantly to their `My Tasks` page and auto-opens the `TaskModal` for that exact task!
+- Supports marking notifications as read individually, or via a "Mark all as read" bulk action.
+- Allows users to permanently **delete** notifications from their feed once they have been read.
+
+## Files Created & Modified for Option 2
+
+| File | Purpose |
+|---|---|
+| `src/lib/notificationService.ts` | Backend server service to safely write `Notification` payloads to the database. |
+| `src/services/notificationService.ts` | Frontend service layer for fetching, marking, and deleting notifications. |
+| `src/app/api/workspaces/[workspaceId]/notifications/route.ts` | API endpoints for `GET` (fetch all) and `PATCH` (mark all as read). |
+| `src/app/api/workspaces/[workspaceId]/notifications/[notificationId]/route.ts` | API endpoint for `PATCH` (mark single as read) and `DELETE` (delete notification permanently). |
+| `src/components/shared/NotificationBell.tsx` | The UI component for the bell, unread badge, and notification dropdown. |
+| `src/components/shared/Header.tsx` | Modified to render the `NotificationBell` and pass down the `workspaceId` via the layout. |
+| `src/app/(dashboard)/dashboard/layout.tsx` | Fetches the primary workspace and passes the `workspaceId` prop down to the Header. |
+| `src/app/api/tasks/[taskId]/comments/route.ts` | Modified to extract `@mentions` via string parsing and trigger a notification. |
+| `src/app/api/tasks/[taskId]/route.ts` | Modified to detect *new* assignees during updates and trigger a notification. |
+| `src/app/api/invites/[token]/accept/route.ts` | Modified to notify the workspace owner when a member accepts an invitation. |
+| `src/app/(dashboard)/dashboard/tasks/MyTasksClient.tsx` | Modified to read `?taskId=` from the URL query params to auto-open the `TaskModal` (Deep Linking). |
+
+## Option 2 API Table
+
+| Method | Route | What it does | Request body | Returns |
+|---|---|---|---|---|
+| `GET` | `/api/workspaces/[id]/notifications` | Fetch latest 50 notifications | None | Array of `Notification` |
+| `PATCH` | `/api/workspaces/[id]/notifications` | Mark all as read | None | `{ success: true }` |
+| `PATCH` | `/api/workspaces/[id]/notifications/[notifId]` | Mark single as read | None | `{ success: true }` |
+| `DELETE` | `/api/workspaces/[id]/notifications/[notifId]` | Delete a read notification | None | `{ success: true }` |
+
+## How to Test Option 2 (Frontend)
+
+To test properly, you must use **two different users**. The best way is to open your normal browser logged in as User A (Workspace Owner), and an **Incognito window** logged in as User B (Normal Member).
+
+**Step 1: Test Task Assignment Alerts**
+1. **As User A (Owner):** Open a task and assign it to **User B**.
+2. **As User B (Incognito):** Look at the top navigation bar. Within 30 seconds, a red pulsing dot will appear on the Bell icon!
+3. Click the Bell to open the dropdown and see the notification: *"You were assigned to a task: [Task Name]"*.
+4. **Deep Linking:** Click the notification. It will navigate you to `/dashboard/tasks` and instantly open the Task Modal for that exact task!
+
+**Step 2: Test `@Mentions`**
+1. **As User B (Incognito):** Open a task comment box and type exactly: `@` followed by the Workspace Owner's exact name (e.g., `@Chetan this is a test`). Hit Post.
+2. **As User A (Owner):** The red pulsing dot will appear on your Bell. Click it to see the alert *"User B mentioned you in a comment"*.
+
+**Step 3: Test Read/Unread States & Deletion**
+1. Trigger a few notifications. Open the dropdown.
+2. Unread notifications have a subtle indigo background. Click the **Checkmark** icon on hover to mark it as read. The red bell dot will disappear if no unread notifications remain.
+3. Once marked as read, hover over the notification again. The checkmark is replaced with a **Red X (Trash)** icon.
+4. Click the **Red X** to permanently delete the notification from your feed!
+5. Click **"Mark all as read"** at the top right of the dropdown to instantly mark all remaining alerts as read.
+
+## How to Test Option 2 (Backend via Postman)
+
+Just like Option 1, ensure you have copied your `session` cookie from the browser into Postman.
+
+### Step 1: Test Fetching Notifications (GET)
+- **URL:** `http://localhost:3000/api/workspaces/YOUR_WORKSPACE_ID/notifications`
+- **Method:** `GET`
+- **Result:** You will receive a JSON array containing up to 50 of your most recent notifications, ordered by date. Note the `id` of one of them.
+
+### Step 2: Test Marking Single Notification as Read (PATCH)
+- **URL:** `http://localhost:3000/api/workspaces/YOUR_WORKSPACE_ID/notifications/THAT_NOTIFICATION_ID`
+- **Method:** `PATCH`
+- **Result:** You will receive a `200 OK` with `{ "success": true }`. If you run the GET request again, `isRead` will be `true`.
+
+### Step 3: Test Marking All as Read (PATCH)
+- **URL:** `http://localhost:3000/api/workspaces/YOUR_WORKSPACE_ID/notifications`
+- **Method:** `PATCH`
+- **Result:** You will receive a `200 OK` with `{ "success": true }`. All your notifications for this workspace are now read.
+
+### Step 4: Test Deleting a Notification (DELETE)
+- **URL:** `http://localhost:3000/api/workspaces/YOUR_WORKSPACE_ID/notifications/THAT_NOTIFICATION_ID`
+- **Method:** `DELETE`
+- **Result:** You will receive a `200 OK` with `{ "success": true }`. If you try to run it again, you will receive a `403 Forbidden or Not Found` error.
+
+## Future Enhancements (Phase 11+)
+
+- **Activity Feed Integration for New Members:** Currently, when a user accepts an invitation and joins the workspace, a notification is sent directly to the Workspace Owner. In the future, we should also write a `"member_added"` event to the global `ActivityLog` so that it appears in the public Activity Feed for all members to see.

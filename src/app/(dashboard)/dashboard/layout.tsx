@@ -26,7 +26,7 @@ export default async function DashboardLayout({
       <Sidebar workspaceSlug={workspace.slug} />
       
       <div className="flex flex-col flex-1 overflow-hidden">
-        <Header />
+        <Header workspaceId={workspace.id} />
         
         <main className="flex-1 overflow-y-auto p-6 md:p-8">
           <div className="mx-auto max-w-6xl">

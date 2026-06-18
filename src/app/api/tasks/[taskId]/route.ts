@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSessionUserWithRefresh } from "@/lib/auth";
 import { logActivity } from "@/lib/activityLogger";
+import { notifyUser } from "@/lib/notificationService";
 
 export async function GET(
   request: Request,
@@ -122,7 +123,8 @@ export async function PATCH(
     }
 
     const existingTaskData = await prisma.task.findUnique({
-      where: { id: taskId }
+      where: { id: taskId },
+      include: { assignees: true }
     });
 
     if (!existingTaskData) {
@@ -208,15 +210,35 @@ export async function PATCH(
     }
 
     if (hasChanges) {
+      // Exclude relational arrays from the activity log to prevent bloat
+      const { assignees: _, ...cleanExisting } = existingTaskData;
       await logActivity(
         workspaceId,
         user.id,
         "task",
         taskId,
         "updated",
-        existingTaskData,
+        cleanExisting,
         updated
       );
+    }
+
+    // Send notifications to new assignees
+    if (assigneeIds !== undefined && Array.isArray(assigneeIds)) {
+      const existingAssigneeIds = existingTaskData.assignees.map(a => a.userId);
+      const newAssignees = assigneeIds.filter(id => !existingAssigneeIds.includes(id));
+
+      for (const assigneeId of newAssignees) {
+        if (assigneeId !== user.id) { // Don't notify self
+          await notifyUser({
+            workspaceId,
+            userId: assigneeId,
+            type: "task_assigned",
+            title: `You were assigned to a task: ${updated.title}`,
+            data: { taskId: updated.id }
+          });
+        }
+      }
     }
 
     return NextResponse.json(updated);

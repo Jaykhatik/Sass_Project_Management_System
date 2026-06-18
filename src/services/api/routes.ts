@@ -7,6 +7,8 @@ export const WORKSPACE_API_ROUTES = {
     `/workspaces/${workspaceId}/members/${userId}`,
   labels: (workspaceId: string) => `/workspaces/${workspaceId}/labels`,
   activity: (workspaceId: string) => `/workspaces/${workspaceId}/activity`,
+  notifications: (workspaceId: string) => `/workspaces/${workspaceId}/notifications`,
+  notificationById: (workspaceId: string, notificationId: string) => `/workspaces/${workspaceId}/notifications/${notificationId}`,
 };
 
 export const PROJECT_API_ROUTES = {
