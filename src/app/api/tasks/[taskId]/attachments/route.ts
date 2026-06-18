@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
+import { logActivity } from "@/lib/activityLogger";
 import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
@@ -86,6 +87,17 @@ export async function POST(
         uploader: { select: { id: true, name: true, email: true } }
       }
     });
+
+    // Log the upload activity
+    await logActivity(
+      task.workspaceId,
+      user.id,
+      "task",
+      taskId,
+      "attached a file",
+      null,
+      { filename: originalFilename, fileSize: Number(fileSize) }
+    );
 
     const serializedAttachment = {
       ...attachment,

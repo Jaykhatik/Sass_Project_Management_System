@@ -37,6 +37,8 @@ This phase is broken down into four distinct options/features. We are building t
 - Enforces strict **Role-Based Access Control (RBAC)** on file deletion: Normal members can only delete files they uploaded; Workspace Owners can delete any file.
 - Safely unlinks and deletes files from the physical hard drive (`fs.unlink`) when deleted via the UI, preventing server storage bloat.
 - Handles Prisma `BigInt` serialization bugs gracefully to prevent `JSON.stringify` server crashes.
+- **Activity Logging Integration:** Automatically logs "attached a file" and "deleted an attachment" events to the global `ActivityLog` table.
+- **Enriched Hover Tooltips:** Updates the frontend Activity Feed to parse and display the exact filename uploaded/deleted when hovering over the log.
 
 ## Files Created & Modified in Phase 11
 
@@ -49,15 +51,16 @@ This phase is broken down into four distinct options/features. We are building t
 | `src/services/attachmentService.ts` | Frontend service layer for uploading, fetching, and deleting attachments |
 | `src/components/task/TaskAttachments.tsx` | The gorgeous Drag-and-Drop component and Attachment Grid UI |
 | `src/components/task/TaskModal.tsx` | Modified to mount the `TaskAttachments` component |
+| `src/app/(dashboard)/dashboard/activity/ActivityClient.tsx` | Updated to display the uploaded/deleted filename dynamically inside hover tooltips |
 | `src/types/index.ts` | Updated TypeScript definitions to include the `Attachment` interfaces |
 
 ## How It Works
 
 1. **Uploading:** A user drags a file into the upload zone. The frontend converts it to `FormData` and sends it via `POST /api/tasks/[taskId]/attachments`.
 2. **Backend Processing:** The server extracts the `File` buffer, determines if it's an image or document, generates a unique hex-coded filename, and writes it directly to the `public/` directory using Node's native `fs` promises.
-3. **Database Linking:** An `Attachment` record is created in PostgreSQL with the raw file URL.
+3. **Database Linking & Logging:** An `Attachment` record is created in PostgreSQL with the raw file URL, and an `ActivityLog` record is generated noting the filename and size.
 4. **Rendering:** The `TaskAttachments` grid maps through the files. If `mimeType` starts with `image/`, it renders an `<img src={fileUrl} />`. Otherwise, it renders a Lucide `<File />` icon.
-5. **Deletion:** Clicking the Trash icon triggers a `DELETE` request. The backend checks RBAC. If authorized, it uses `fs.unlink()` to permanently delete the physical file from the disk, then removes the database record.
+5. **Deletion:** Clicking the Trash icon triggers a `DELETE` request. The backend checks RBAC. If authorized, it uses `fs.unlink()` to permanently delete the physical file from the disk, removes the database record, and logs the deletion to the `ActivityLog`.
 
 ## API Table
 

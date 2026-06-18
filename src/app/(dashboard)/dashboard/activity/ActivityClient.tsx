@@ -156,6 +156,10 @@ export function ActivityClient({ workspaceId }: { workspaceId: string }) {
               hoverTitle = `Comment: "${log.afterData.content}"\n${hoverTitle}`;
             } else if (log.action === "deleted a comment" && log.beforeData?.content) {
               hoverTitle = `Deleted Comment: "${log.beforeData.content}"\n${hoverTitle}`;
+            } else if (log.action === "attached a file" && log.afterData?.filename) {
+              hoverTitle = `File: ${log.afterData.filename}\n${hoverTitle}`;
+            } else if (log.action === "deleted an attachment" && log.beforeData?.filename) {
+              hoverTitle = `Deleted File: ${log.beforeData.filename}\n${hoverTitle}`;
             } else if (log.action === "updated" && log.entityType === "task") {
               if (log.afterData?.status !== log.beforeData?.status) {
                 hoverTitle = `Status: ${log.beforeData?.status || 'none'} ➔ ${log.afterData?.status || 'none'}\n${hoverTitle}`;

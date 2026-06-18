@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
+import { logActivity } from "@/lib/activityLogger";
 import fs from "fs/promises";
 import path from "path";
 
@@ -52,6 +53,16 @@ export async function DELETE(
     await prisma.attachment.delete({
       where: { id: attachmentId }
     });
+
+    // Log the deletion activity
+    await logActivity(
+      attachment.task.workspaceId,
+      user.id,
+      "task",
+      taskId,
+      "deleted an attachment",
+      { filename: attachment.filename }
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {
