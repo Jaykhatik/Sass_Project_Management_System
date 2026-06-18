@@ -14,6 +14,7 @@ import {
   X,
   LogOut,
   ChevronRight,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSelector, useDispatch } from "react-redux";
@@ -26,6 +27,7 @@ const navLinks = [
   { name: "Projects", href: "/dashboard/projects", icon: FolderKanban },
   { name: "Members", href: "/dashboard/members", icon: Users },
   { name: "Activity Feed", href: "/dashboard/activity", icon: LayoutDashboard },
+  { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 

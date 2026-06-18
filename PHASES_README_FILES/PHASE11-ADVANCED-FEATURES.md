@@ -272,6 +272,56 @@ Ensure your Postman client has the `session` cookie configured as described in O
 - **Method:** `GET`
 - **Result:** You will receive a JSON response containing three arrays: `tasks`, `projects`, and `members`. Only records matching your search term will be populated. If no matches are found, it gracefully returns empty arrays.
 
+## Option 4: Analytics & Sprint Reports 📊
+
+### What Option 4 Does
+
+- Implements a dedicated Analytics dashboard to visualize workspace health and member workload.
+- Uses the `recharts` library to render highly premium, dynamic data visualizations.
+- Includes a backend API endpoint that performs parallel database aggregation queries to extract metrics across the entire workspace in real-time.
+- Visualizations include: 
+  - Summary Stat Cards (Total Projects, Total Tasks, Total Team Members, Completion Rate).
+  - Apple-Watch style Concentric Radial Rings for Task Status Distribution.
+  - Horizontal Multi-Color Bar Charts for Task Priority Distribution.
+  - Smooth Overlapping Mountain Gradient Area Charts for calculating Member Workload & Velocity (Active vs Completed Tasks).
+- The metrics engine strictly excludes sub-tasks to prevent inflation of completion rates, and cleanly excludes workspace owners from the Team Member headcount for true employee analytics.
+
+## Files Created & Modified for Option 4
+
+| File | Purpose |
+|---|---|
+| `src/app/api/workspaces/[workspaceId]/analytics/route.ts` | The backend aggregation endpoint executing 6 simultaneous `prisma.groupBy` and `count` operations to generate workspace metrics. |
+| `src/services/analyticsService.ts` | The frontend service layer for fetching analytics data. |
+| `src/services/api/routes.ts` | Registered the new `/analytics` route. |
+| `src/components/shared/Sidebar.tsx` | Added the "Analytics" navigation link using the `BarChart3` icon. |
+| `src/app/(dashboard)/dashboard/analytics/page.tsx` | Server component page validating session and rendering the Analytics client. |
+| `src/app/(dashboard)/dashboard/analytics/AnalyticsClient.tsx` | The massive frontend client component utilizing `recharts` to render the interactive charts, gradients, and stat cards. |
+
+## Option 4 API Table
+
+| Method | Route | What it does | Request body | Returns |
+|---|---|---|---|---|
+| `GET` | `/api/workspaces/[id]/analytics` | Aggregates all workspace data for charts | None | JSON object with `summary`, `projectsByStatus`, `tasksByStatus`, `tasksByPriority`, `tasksByUser` |
+
+## How to Test Option 4
+
+**Step 1: Open Analytics**
+1. Click the new **Analytics** tab in the left-hand sidebar navigation.
+2. The page will smoothly animate in, rendering the 4 glassmorphic summary cards at the top.
+
+**Step 2: Verify the Charts**
+1. Ensure you have created a few tasks with varying statuses (`todo`, `done`) and priorities (`high`, `critical`) in your workspace.
+2. Look at the **Task Status Distribution**: You should see concentric Apple-Watch style rings representing each status.
+3. Look at the **Task Priority Distribution**: You should see horizontal multi-colored bars with capitalized labels on the left and exact counts floating on the right edge of each bar.
+4. Look at the **Member Workload & Velocity**: You should see an overlapping, translucent Mountain Area Chart. The green gradient represents completed tasks, while the blue gradient represents active tasks.
+
+**Step 3: Verify Data Integrity**
+1. Create a "Sub-task" inside an existing Task. Notice that the Analytics dashboard does *not* count the sub-task.
+2. Look at the "Team Members" top summary card. Verify that it counts your invited employees/members but completely excludes the Workspace Owner.
+
+---
+
 ## Future Enhancements (Phase 11+)
 
 - **Activity Feed Integration for New Members:** Currently, when a user accepts an invitation and joins the workspace, a notification is sent directly to the Workspace Owner. In the future, we should also write a `"member_added"` event to the global `ActivityLog` so that it appears in the public Activity Feed for all members to see.
+

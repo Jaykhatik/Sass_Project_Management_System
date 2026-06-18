@@ -10,6 +10,7 @@ export const WORKSPACE_API_ROUTES = {
   notifications: (workspaceId: string) => `/workspaces/${workspaceId}/notifications`,
   notificationById: (workspaceId: string, notificationId: string) => `/workspaces/${workspaceId}/notifications/${notificationId}`,
   search: (workspaceId: string) => `/workspaces/${workspaceId}/search`,
+  analytics: (workspaceId: string) => `/workspaces/${workspaceId}/analytics`,
 };
 
 export const PROJECT_API_ROUTES = {
