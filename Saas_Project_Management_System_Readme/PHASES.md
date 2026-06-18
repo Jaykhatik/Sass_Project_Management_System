@@ -19,7 +19,7 @@ Authentication is intentionally last so the core product works and is testable b
 | 8     | Team Invitations & Onboarding | Secure invite links to grow the workspace           |
 | 9     | Sprints & Backlog             | Planning layer on top of tasks                      |
 | 10    | Comments & Activity           | Collaboration layer                                 |
-| 11    | File Attachments, Notifications, & Analytics | File uploads, real-time alerts, and data dashboards |
+| 11    | Attachments, Notifications, Search, & Analytics | File uploads, real-time alerts, Cmd+K, and dashboards |
 | 12    | Billing & Plans               | Monetization after product is complete              |
 | 13    | Authentication & Auth Guards  | Wire up auth last, swap hardcoded user              |
 
@@ -525,9 +525,9 @@ Authentication is intentionally last so the core product works and is testable b
 
 ---
 
-## Phase 11 — File Attachments, Notifications, & Analytics (Advanced Features)
+## Phase 11 — File Attachments, Notifications, Global Search, & Analytics (Advanced Features)
 
-**Goal:** Upload files, real-time in-app notifications, and a comprehensive dashboard.
+**Goal:** Upload files, real-time in-app notifications, global app navigation, and a comprehensive dashboard.
 
 ### Part 1 — File Attachments
 
@@ -624,9 +624,43 @@ Authentication is intentionally last so the core product works and is testable b
 
 ### ✅ Done When
 
-- Dashboard shows real aggregated data from DB
-- Charts render with Recharts
-- Overdue tasks section is visible
+- Analytics dashboard shows real aggregated data from DB
+- Charts render correctly with Recharts using correct axis labels and tooltips
+- Owner is excluded from members stat card
+- Subtasks are excluded from aggregations
+
+---
+
+### Part 4 — Global Command Menu & Search
+
+**Goal:** Allow users to instantly search and navigate anywhere using keyboard shortcuts.
+
+### Steps
+
+1. Create a unified search API (`/api/workspaces/[id]/search?q=...`)
+   - Query Prisma for Tasks, Projects, and Members simultaneously.
+   - Use `contains` for case-insensitive partial matching.
+   - Ensure permissions (only search within the active workspace).
+
+2. Create Search Service (`src/services/searchService.ts`)
+   - Build frontend fetch function with debouncing support.
+
+3. Build `CommandMenu` UI Component
+   - Listen for `Cmd+K` or `Ctrl+K` keydown events globally.
+   - Build a glassmorphic modal overlay.
+   - Implement `useDebounce` hook to prevent spamming the backend while typing.
+   - Map results into distinct categories (Tasks, Projects, Members).
+
+4. Add Keyboard Navigation & Deep Linking
+   - Allow users to scroll results using `ArrowUp` and `ArrowDown`.
+   - Pressing `Enter` instantly routes them to the correct board or opens the specific task modal.
+
+### ✅ Done When
+
+- Pressing `Cmd+K` opens the search modal from anywhere.
+- Searching returns accurate Tasks, Projects, and Members.
+- Arrow keys allow selecting results without a mouse.
+- Pressing `Enter` routes correctly to the selected entity.
 
 ---
 
