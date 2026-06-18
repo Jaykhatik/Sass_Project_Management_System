@@ -15,6 +15,7 @@ import {
   LogOut,
   ChevronRight,
   BarChart3,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSelector, useDispatch } from "react-redux";
@@ -29,6 +30,7 @@ const navLinks = [
   { name: "Activity Feed", href: "/dashboard/activity", icon: LayoutDashboard },
   { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
+  { name: "Billing", href: "/dashboard/settings/billing", icon: CreditCard },
 ];
 
 export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
@@ -104,7 +106,7 @@ export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive =
-              link.href === "/dashboard"
+              link.href === "/dashboard" || link.href === "/dashboard/settings"
                 ? pathname === link.href
                 : pathname.startsWith(link.href);
 
@@ -132,16 +134,7 @@ export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
 
         {/* ── Bottom Section ── */}
         <div className="px-3 pb-4 pt-3 border-t shrink-0 space-y-2">
-          {/* Upgrade card */}
-          <div className="bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-xl p-4">
-            <h4 className="text-sm font-semibold mb-1">Upgrade to Pro</h4>
-            <p className="text-[11px] text-muted-foreground mb-3 leading-relaxed">
-              Unlock unlimited projects, advanced analytics, and priority support.
-            </p>
-            <button suppressHydrationWarning className="w-full text-xs bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-2 rounded-lg font-semibold hover:opacity-90 active:scale-95 transition-all shadow-sm">
-              Upgrade Plan ✨
-            </button>
-          </div>
+
         </div>
       </aside>
     </>

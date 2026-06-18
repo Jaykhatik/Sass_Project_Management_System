@@ -33,7 +33,7 @@ export function NewProjectDialog({ workspaceId, onClose }: Props) {
     try {
       const project = await createProject({ workspaceId, name: name.trim(), description: description.trim(), color });
       router.refresh();
-      router.push(`/dashboard/projects/${project.id}`);
+      router.push(`/dashboard/projects/${project.id || project.project_id}`);
       onClose();
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);

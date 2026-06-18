@@ -33,6 +33,31 @@ export async function POST(
       return NextResponse.json({ error: "Only the workspace owner can invite members" }, { status: 403 });
     }
 
+
+    // Plan Limit Check
+    const subscription = await prisma.subscription.findUnique({
+      where: { workspaceId }
+    });
+
+    if (!subscription || subscription.plan === "free" || subscription.status !== "active") {
+      const memberCount = await prisma.workspaceMember.count({
+        where: { workspaceId }
+      });
+      const activeInvitesCount = await prisma.invitation.count({
+        where: { workspaceId, acceptedAt: null }
+      });
+
+      if (memberCount + activeInvitesCount >= 5) {
+        return NextResponse.json(
+          {
+            error: "You have reached the free tier limit of 5 team members. Please upgrade to Pro to invite more.",
+            code: "PLAN_LIMIT_REACHED",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     // Generate secure token
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date();

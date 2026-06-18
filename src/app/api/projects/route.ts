@@ -153,6 +153,27 @@ export async function POST(request: Request) {
       );
     }
 
+    // Plan Limit Check
+    const subscription = await prisma.subscription.findUnique({
+      where: { workspaceId }
+    });
+
+    if (!subscription || subscription.plan === "free" || subscription.status !== "active") {
+      const projectCount = await prisma.project.count({
+        where: { workspaceId }
+      });
+
+      if (projectCount >= 3) {
+        return NextResponse.json(
+          {
+            error: "You have reached the free tier limit of 3 projects. Please upgrade to Pro.",
+            code: "PLAN_LIMIT_REACHED",
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     const { project, boardId } = await prisma.$transaction(async (tx) => {
       const created = await tx.project.create({
         data: {
