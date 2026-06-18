@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import { X, Loader2, FolderKanban } from "lucide-react";
 import { createProject } from "@/services/projectClientService";
 
@@ -42,16 +43,26 @@ export function NewProjectDialog({ workspaceId, onClose }: Props) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
+  const [mounted, setMounted] = useState(false);
 
-      {/* Dialog */}
-      <div className="relative bg-card border rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6 animate-in zoom-in-95 duration-200">
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 overflow-y-auto custom-scrollbar">
+      <div className="flex min-h-full items-center justify-center p-4 text-center">
+        {/* Backdrop */}
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+          onClick={onClose}
+        />
+
+        {/* Dialog */}
+        <div className="relative bg-card border rounded-2xl shadow-2xl w-full max-w-md p-6 text-left align-middle animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -135,6 +146,8 @@ export function NewProjectDialog({ workspaceId, onClose }: Props) {
           </div>
         </form>
       </div>
-    </div>
+      </div>
+    </div>,
+    document.body
   );
 }

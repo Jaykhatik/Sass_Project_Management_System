@@ -1,8 +1,8 @@
 import React from "react";
 import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { Clock, CheckCircle2, TrendingUp } from "lucide-react";
-import { FolderKanban as FolderKanbanIcon } from "lucide-react";
+import Link from "next/link";
+import { Clock, CheckCircle2, TrendingUp, FolderKanban as FolderKanbanIcon, AlertCircle } from "lucide-react";
 import { NewProjectButton } from "@/components/project/NewProjectButton";
 import { getSessionUser, getPrimaryWorkspaceForUser } from "@/lib/auth";
 
@@ -13,19 +13,70 @@ export default async function DashboardPage() {
   const workspace = await getPrimaryWorkspaceForUser(user.id);
   if (!workspace) notFound();
 
+  // 1. Fetch Workspace with 6 recent projects (including task counts)
   const workspaceWithData = await prisma.workspace.findUnique({
     where: { id: workspace.id },
     include: {
-      projects: true,
-      tasks: {
-        where: { status: { not: "done" } },
-        orderBy: { dueDate: "asc" },
-        take: 5,
+      projects: {
+        orderBy: { updatedAt: "desc" },
+        take: 6,
+        include: {
+          _count: {
+            select: { tasks: { where: { parentTaskId: null } } }
+          },
+          tasks: {
+            where: { status: "done", parentTaskId: null },
+            select: { id: true }
+          }
+        }
       },
     },
   });
 
   if (!workspaceWithData) notFound();
+
+  // 2. Fetch "My" upcoming tasks
+  let upcomingTasks = await prisma.task.findMany({
+    where: {
+      workspaceId: workspace.id,
+      status: { not: "done" },
+      parentTaskId: null,
+      assignees: { some: { userId: user.id } }
+    },
+    orderBy: { dueDate: "asc" },
+    take: 5,
+  });
+
+  // If user has no tasks assigned, fallback to showing workspace activity
+  if (upcomingTasks.length === 0) {
+    upcomingTasks = await prisma.task.findMany({
+      where: {
+        workspaceId: workspace.id,
+        status: { not: "done" },
+        parentTaskId: null,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    });
+  }
+
+  // 3. True Metrics
+  const completedTasksCount = await prisma.task.count({
+    where: { workspaceId: workspace.id, status: "done", parentTaskId: null }
+  });
+
+  const activeProjectsCount = await prisma.project.count({
+    where: { workspaceId: workspace.id, status: "active" }
+  });
+
+  const upcomingDeadlinesCount = await prisma.task.count({
+    where: { 
+      workspaceId: workspace.id, 
+      status: { not: "done" },
+      parentTaskId: null,
+      dueDate: { not: null }
+    }
+  });
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1400px] mx-auto pb-12">
@@ -41,7 +92,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="border border-border/50 rounded-3xl p-6 bg-card/40 backdrop-blur-xl shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
           <div className="absolute -top-6 -right-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
-            <FolderKanbanIcon className="w-40 h-40" />
+            <FolderKanbanIcon className="w-40 h-40 text-indigo-500" />
           </div>
           <div className="flex items-center gap-3 text-muted-foreground mb-4 relative z-10">
             <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-500 shadow-sm border border-indigo-500/20">
@@ -50,13 +101,13 @@ export default async function DashboardPage() {
             <h3 className="font-bold tracking-wide uppercase text-xs">Active Projects</h3>
           </div>
           <p className="text-4xl font-black relative z-10 text-foreground/90">
-            {workspaceWithData.projects.length}
+            {activeProjectsCount}
           </p>
         </div>
 
         <div className="border border-border/50 rounded-3xl p-6 bg-card/40 backdrop-blur-xl shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
           <div className="absolute -top-6 -right-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
-            <CheckCircle2 className="w-40 h-40" />
+            <CheckCircle2 className="w-40 h-40 text-emerald-500" />
           </div>
           <div className="flex items-center gap-3 text-muted-foreground mb-4 relative z-10">
             <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-500 shadow-sm border border-emerald-500/20">
@@ -64,12 +115,14 @@ export default async function DashboardPage() {
             </div>
             <h3 className="font-bold tracking-wide uppercase text-xs">Tasks Completed</h3>
           </div>
-          <p className="text-4xl font-black relative z-10 text-foreground/90">24</p>
+          <p className="text-4xl font-black relative z-10 text-foreground/90">
+            {completedTasksCount}
+          </p>
         </div>
 
         <div className="border border-border/50 rounded-3xl p-6 bg-card/40 backdrop-blur-xl shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
           <div className="absolute -top-6 -right-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
-            <Clock className="w-40 h-40" />
+            <Clock className="w-40 h-40 text-amber-500" />
           </div>
           <div className="flex items-center gap-3 text-muted-foreground mb-4 relative z-10">
             <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-500 shadow-sm border border-amber-500/20">
@@ -78,7 +131,7 @@ export default async function DashboardPage() {
             <h3 className="font-bold tracking-wide uppercase text-xs">Upcoming Deadlines</h3>
           </div>
           <p className="text-4xl font-black relative z-10 text-foreground/90">
-            {workspaceWithData.tasks.length}
+            {upcomingDeadlinesCount}
           </p>
         </div>
       </div>
@@ -102,30 +155,54 @@ export default async function DashboardPage() {
               </div>
             ) : (
               <div className="divide-y divide-border/40">
-                {workspaceWithData.projects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="p-5 hover:bg-muted/40 transition-colors flex items-center justify-between cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-sm transform group-hover:scale-105 transition-transform"
-                        style={{ backgroundColor: project.color || "#6366F1" }}
-                      >
-                        {project.name.charAt(0)}
+                {workspaceWithData.projects.map((project) => {
+                  const totalTasks = project._count.tasks;
+                  const completedTasks = project.tasks.length;
+                  const progress = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+
+                  return (
+                    <Link
+                      href={`/dashboard/projects/${project.id}`}
+                      key={project.id}
+                      className="p-5 hover:bg-muted/40 transition-colors flex flex-col gap-3 cursor-pointer group block"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div
+                            className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-sm transform group-hover:scale-105 transition-transform"
+                            style={{ backgroundColor: project.color || "#6366F1" }}
+                          >
+                            {project.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-bold text-base group-hover:text-primary transition-colors">{project.name}</p>
+                            <p className="text-xs font-medium text-muted-foreground mt-0.5 line-clamp-1">
+                              {project.description || "No description provided"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className={`text-[10px] font-bold px-2.5 py-1 uppercase tracking-widest bg-background border border-border/50 rounded-lg shadow-sm ${project.status === 'archived' ? 'text-slate-400' : 'text-muted-foreground'}`}>
+                          {project.status}
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-bold text-base group-hover:text-primary transition-colors">{project.name}</p>
-                        <p className="text-xs font-medium text-muted-foreground mt-0.5 line-clamp-1">
-                          {project.description || "No description provided"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-[10px] font-bold px-2.5 py-1 uppercase tracking-widest bg-background border border-border/50 rounded-lg text-muted-foreground shadow-sm">
-                      {project.status}
-                    </div>
-                  </div>
-                ))}
+                      
+                      {/* Interactive Progress Bar */}
+                      {totalTasks > 0 && (
+                        <div className="w-full flex items-center gap-3">
+                          <div className="h-1.5 w-full bg-border/40 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-primary transition-all duration-1000 ease-out"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] font-bold text-muted-foreground w-8 text-right shrink-0">
+                            {progress}%
+                          </span>
+                        </div>
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -137,23 +214,26 @@ export default async function DashboardPage() {
               <div className="p-1.5 bg-background rounded-md shadow-sm border border-border/50">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
               </div>
-              My Upcoming Tasks
+              My(Owner's) Upcoming Tasks
             </h2>
           </div>
           <div className="p-0 overflow-y-auto flex-1 custom-scrollbar">
-            {workspaceWithData.tasks.length === 0 ? (
+            {upcomingTasks.length === 0 ? (
               <div className="p-12 flex flex-col items-center justify-center text-muted-foreground text-sm h-full">
                 <CheckCircle2 className="w-12 h-12 opacity-20 mb-3" />
                 <p className="font-medium">No upcoming tasks. You&apos;re all caught up!</p>
               </div>
             ) : (
               <div className="divide-y divide-border/40">
-                {workspaceWithData.tasks.map((task) => (
-                  <div
+                {upcomingTasks.map((task) => (
+                  <Link
+                    href={`/dashboard/projects/${task.projectId}`}
                     key={task.id}
-                    className="p-5 hover:bg-muted/40 transition-colors flex items-start gap-4 cursor-pointer group"
+                    className="p-5 hover:bg-muted/40 transition-colors flex items-start gap-4 cursor-pointer group block"
                   >
-                    <div className="mt-1 w-5 h-5 rounded-md border-2 flex-shrink-0 border-border/80 group-hover:border-primary group-hover:bg-primary/10 transition-colors shadow-sm bg-background/50"></div>
+                    <div className="mt-1 w-5 h-5 rounded-md border-2 flex-shrink-0 border-border/80 group-hover:border-primary group-hover:bg-primary/10 transition-colors shadow-sm bg-background/50 flex items-center justify-center">
+                      <CheckCircle2 className="w-3 h-3 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
                     <div>
                       <p className="font-bold text-sm leading-tight group-hover:text-primary transition-colors">
                         {task.title}
@@ -181,7 +261,7 @@ export default async function DashboardPage() {
                         </span>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
