@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Task, Column } from "@/types";
 import { X, Loader2, ListTodo, Tag, ShieldAlert } from "lucide-react";
 import { updateTask, deleteTask, getTaskById, getAllTasks, createSubtask, addDependency } from "@/services/taskService";
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, isSameDay, addDays, parseISO } from "date-fns";
 import { getAllMembers, getWorkspaceLabels } from "@/services/workspaceService";
 import { getCurrentUser } from "@/services/authService";
 import dynamic from "next/dynamic";
@@ -14,6 +15,200 @@ const MDEditor = dynamic(
   () => import("@uiw/react-md-editor").then((mod) => mod.default),
   { ssr: false }
 );
+
+const CustomSelect = ({
+  value,
+  onChange,
+  options,
+  className,
+  disabled,
+  placeholder = "Select..."
+}: any) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find((opt: any) => String(opt.value) === String(value));
+
+  return (
+    <div
+      className={`relative ${className} ${disabled ? "opacity-50 pointer-events-none" : ""}`}
+      ref={ref}
+    >
+      <div
+        className="w-full h-full bg-background border border-border/50 rounded-xl px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-primary/50 outline-none hover:bg-muted transition-all cursor-pointer flex items-center justify-between gap-3 shadow-sm"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span className="truncate">
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <svg
+          className={`w-4 h-4 shrink-0 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-2 bg-background border border-border shadow-lg rounded-xl max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2">
+          {options.map((opt: any) => (
+            <div
+              key={opt.value}
+              className={`px-4 py-3 text-sm cursor-pointer hover:bg-muted transition-colors ${opt.disabled ? "opacity-50 cursor-not-allowed hidden" : ""} ${String(value) === String(opt.value) ? "bg-primary/10 text-primary font-semibold" : "text-foreground"}`}
+              onClick={() => {
+                if (!opt.disabled) {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }
+              }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const CustomDatePicker = ({
+  value,
+  onChange,
+  className
+}: {
+  value: string | null;
+  onChange: (val: string) => void;
+  className?: string;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [currentMonth, setCurrentMonth] = useState(value ? parseISO(value) : new Date());
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedDate = value ? parseISO(value) : null;
+
+  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+
+  const onDateClick = (day: Date) => {
+    onChange(format(day, 'yyyy-MM-dd'));
+    setIsOpen(false);
+  };
+
+  const renderHeader = () => {
+    return (
+      <div className="flex justify-between items-center mb-4">
+        <button type="button" onClick={prevMonth} className="p-1 hover:bg-muted rounded">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <span className="text-sm font-bold">{format(currentMonth, 'MMMM yyyy')}</span>
+        <button type="button" onClick={nextMonth} className="p-1 hover:bg-muted rounded">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        </button>
+      </div>
+    );
+  };
+
+  const renderDays = () => {
+    const days = [];
+    const dateFormat = "EE";
+    let startDate = startOfWeek(currentMonth);
+    for (let i = 0; i < 7; i++) {
+      days.push(
+        <div key={i} className="text-center text-xs font-medium text-muted-foreground py-1">
+          {format(addDays(startDate, i), dateFormat)}
+        </div>
+      );
+    }
+    return <div className="grid grid-cols-7 mb-2">{days}</div>;
+  };
+
+  const renderCells = () => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(monthStart);
+    const startDate = startOfWeek(monthStart);
+    const endDate = endOfWeek(monthEnd);
+
+    const rows = [];
+    let days = [];
+    let day = startDate;
+    let formattedDate = "";
+
+    while (day <= endDate) {
+      for (let i = 0; i < 7; i++) {
+        formattedDate = format(day, "d");
+        const cloneDay = day;
+        const isSelected = selectedDate ? isSameDay(day, selectedDate) : false;
+        const isCurrentMonth = isSameMonth(day, monthStart);
+        
+        days.push(
+          <div
+            key={day.toISOString()}
+            className={`p-1 flex justify-center items-center text-sm cursor-pointer rounded hover:bg-muted transition-colors ${!isCurrentMonth ? "text-muted-foreground/30" : ""} ${isSelected ? "bg-primary text-primary-foreground hover:bg-primary/90 font-bold" : ""}`}
+            onClick={() => onDateClick(cloneDay)}
+          >
+            <span className="w-8 h-8 flex items-center justify-center rounded-md">{formattedDate}</span>
+          </div>
+        );
+        day = addDays(day, 1);
+      }
+      rows.push(
+        <div className="grid grid-cols-7 gap-1 mb-1" key={day.toISOString()}>
+          {days}
+        </div>
+      );
+      days = [];
+    }
+    return <div>{rows}</div>;
+  };
+
+  return (
+    <div className={`relative ${className}`} ref={ref}>
+      <div
+        className="w-full h-full bg-background border border-border/50 rounded-xl px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-primary/50 outline-none hover:bg-muted transition-all cursor-pointer flex items-center justify-between gap-3 shadow-sm"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span className="truncate">
+          {selectedDate ? format(selectedDate, 'MMM d, yyyy') : "Select date..."}
+        </span>
+        <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+      {isOpen && (
+        <div className="absolute z-50 mt-2 p-4 bg-background border border-border shadow-lg rounded-xl animate-in fade-in slide-in-from-top-2 w-72 left-0 sm:left-auto sm:-right-8">
+          {renderHeader()}
+          {renderDays()}
+          {renderCells()}
+          <div className="pt-3 flex justify-between border-t mt-2">
+            <button type="button" onClick={() => { onChange(""); setIsOpen(false); }} className="text-xs font-medium text-muted-foreground hover:text-destructive transition-colors px-2 py-1 rounded hover:bg-muted">Clear</button>
+            <button type="button" onClick={() => onDateClick(new Date())} className="text-xs font-medium text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded hover:bg-muted">Today</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface Props {
   taskId: string;
@@ -158,20 +353,21 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose}>
       <div className="bg-background border border-border/50 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b bg-background/80 backdrop-blur-md">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-4 sm:px-6 py-4 border-b bg-background/80 backdrop-blur-md rounded-t-2xl">
           <div className="flex items-center gap-3">
-            <select
+            <CustomSelect
               value={task.priority}
-              onChange={(e) => handleUpdate("priority", e.target.value)}
+              onChange={(val: string) => handleUpdate("priority", val)}
               disabled={saving}
-              className="text-xs bg-muted border-transparent rounded-md px-2 py-1 outline-none focus:ring-2 ring-primary/50 uppercase font-bold"
-            >
-              <option value="none">No Priority</option>
-              <option value="low">Low Priority</option>
-              <option value="medium">Medium Priority</option>
-              <option value="high">High Priority</option>
-              <option value="critical">Critical</option>
-            </select>
+              className="w-40 h-9"
+              options={[
+                { value: "none", label: "No Priority" },
+                { value: "low", label: "Low Priority" },
+                { value: "medium", label: "Medium Priority" },
+                { value: "high", label: "High Priority" },
+                { value: "critical", label: "Critical" },
+              ]}
+            />
             {saving && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
           </div>
           <div className="flex items-center gap-2">
@@ -185,7 +381,7 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-8">
+        <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
           <input
             type="text"
             value={task.title}
@@ -208,14 +404,13 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <div className="space-y-2">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Due Date</label>
-              <input
-                type="date"
-                value={task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ""}
-                onChange={(e) => handleUpdate("dueDate", e.target.value)}
-                className="w-full bg-muted/30 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 ring-primary/50"
+              <CustomDatePicker
+                value={task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : null}
+                onChange={(val) => handleUpdate("dueDate", val)}
+                className="w-full h-10"
               />
             </div>
             <div className="space-y-2">
@@ -227,38 +422,28 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
                   </span>
                 ))}
               </div>
-              <select
-                className="w-full bg-muted/30 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 ring-primary/50"
-                onChange={async (e) => {
-                  const labelId = e.target.value;
+              <CustomSelect
+                className="w-full h-10"
+                placeholder="+ Add Label"
+                value=""
+                onChange={async (labelId: string) => {
                   if (!labelId) return;
-                  
                   const selectedLabel = workspaceLabels.find(l => l.id === labelId);
                   if (selectedLabel) {
                     const currentLabelIds = task.labels?.map((l:any) => l.label.id) || [];
                     const newLabelIds = [...currentLabelIds, labelId];
-                    
-                    // Optimistic UI Update
                     const updatedTask = { ...task, labels: [...(task.labels || []), { label: selectedLabel }] };
                     setTask(updatedTask);
-                    
-                    // Database Save
                     try {
                       await updateTask(taskId, { workspaceId, labelIds: newLabelIds });
                     } catch(err) {
                       console.error("Failed to update task labels", err);
                     }
-                    
                     onUpdated(updatedTask);
                   }
                 }}
-                value=""
-              >
-                <option value="" disabled>+ Add Label</option>
-                {workspaceLabels.filter(wl => !task.labels?.find((tl:any) => tl.label.id === wl.id)).map(l => (
-                  <option key={l.id} value={l.id}>{l.name}</option>
-                ))}
-              </select>
+                options={workspaceLabels.filter(wl => !task.labels?.find((tl:any) => tl.label.id === wl.id)).map(l => ({ value: l.id, label: l.name }))}
+              />
             </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Story Points</label>
@@ -318,17 +503,14 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
                    </div>
                 ))}
                 
-                <select 
-                  className="bg-muted/50 border border-dashed border-muted-foreground/30 text-muted-foreground rounded-md px-2 py-1 text-xs outline-none focus:ring-2 ring-primary/50 font-medium cursor-pointer"
+                <CustomSelect
+                  className="w-48 h-9"
+                  placeholder="+ Add Assignee"
                   value=""
-                  onChange={(e) => addAssignee(e.target.value)}
+                  onChange={(val: string) => addAssignee(val)}
                   disabled={saving}
-                >
-                  <option value="" disabled>+ Add Assignee</option>
-                  {members.filter(m => !task.assignees?.find(a => a.user.id === m.user.id)).map(m => (
-                    <option key={m.user.id} value={m.user.id}>{m.user.name}</option>
-                  ))}
-                </select>
+                  options={members.filter(m => !task.assignees?.find(a => a.user.id === m.user.id)).map(m => ({ value: m.user.id, label: m.user.name }))}
+                />
               </div>
             </div>
           </div>
@@ -352,10 +534,11 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
                 })}
               </div>
 
-              <select
-                className="w-full bg-muted/30 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 ring-primary/50"
-                onChange={async (e) => {
-                  const dependentTaskId = e.target.value;
+              <CustomSelect
+                className="w-full h-10"
+                placeholder="+ Add a blocking task..."
+                value=""
+                onChange={async (dependentTaskId: string) => {
                   if (!dependentTaskId) return;
                   try {
                     await addDependency(taskId, dependentTaskId);
@@ -369,16 +552,11 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
                     alert(err.message || "Failed to add dependency");
                   }
                 }}
-                value=""
-              >
-                <option value="" disabled>+ Add a blocking task...</option>
-                {workspaceTasks
+                options={workspaceTasks
                   .filter(t => t.id !== taskId)
                   .filter(t => !task.blockedBy?.find((dep: any) => dep.blockerTaskId === t.id))
-                  .map(t => (
-                    <option key={t.id} value={t.id}>{t.title}</option>
-                  ))}
-              </select>
+                  .map(t => ({ value: t.id, label: t.title }))}
+              />
             </div>
           </div>
 

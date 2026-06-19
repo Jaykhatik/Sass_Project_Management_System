@@ -110,7 +110,7 @@ export function NotificationBell({ workspaceId }: { workspaceId: string }) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-card border rounded-xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[500px]">
+        <div className="fixed sm:absolute inset-x-4 sm:inset-x-auto top-[72px] sm:top-auto sm:right-0 sm:mt-2 w-auto sm:w-96 bg-card border rounded-xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-[80vh] sm:max-h-[500px]">
           <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
             <h3 className="font-semibold text-sm">Notifications</h3>
             {unreadCount > 0 && (
