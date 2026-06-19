@@ -120,8 +120,8 @@ export function ListView({ columns, workspaceId }: Props) {
                 })()}
               </div>
 
-              {/* Mobile Flex Wrapper for Meta elements */}
-              <div className="flex flex-wrap items-center gap-2 sm:gap-0 w-full sm:w-auto sm:contents mt-1 sm:mt-0">
+              {/* Mobile Wrapper 1: Status & Priority */}
+              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto sm:contents mt-2 sm:mt-0">
                 {/* Status */}
                 <div className="flex justify-start sm:justify-center">
                   <span
@@ -141,28 +141,32 @@ export function ListView({ columns, workspaceId }: Props) {
                     {task.priority}
                   </span>
                 </div>
+              </div>
+
+              {/* Mobile Wrapper 2: Metrics & Assignees */}
+              <div className="flex items-center justify-between sm:justify-center gap-4 w-full sm:w-auto sm:contents mt-3 sm:mt-0">
 
               {/* Metrics (Story Points & Hours) */}
-              <div className="flex flex-col items-center justify-center gap-1.5">
+              <div className="flex flex-row sm:flex-col items-center justify-start sm:justify-center gap-2 sm:gap-1.5">
                 {task.storyPoints != null && (
-                  <span title="Story Points" className="text-[10px] font-bold flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-lg border border-border/50 text-muted-foreground w-[80%] justify-center shadow-sm">
+                  <span title="Story Points" className="text-[10px] font-bold flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-lg border border-border/50 text-muted-foreground w-auto sm:w-[80%] justify-center shadow-sm">
                     ⭐ {task.storyPoints}
                   </span>
                 )}
                 {(task.estimatedHours != null || task.actualHours != null) && (
-                  <span title="Hours (Actual / Estimated)" className="text-[10px] font-bold flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-lg border border-border/50 text-muted-foreground w-[80%] justify-center shadow-sm">
+                  <span title="Hours (Actual / Estimated)" className="text-[10px] font-bold flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-lg border border-border/50 text-muted-foreground w-auto sm:w-[80%] justify-center shadow-sm">
                     ⏱️ {task.actualHours || 0} / {task.estimatedHours || 0}h
                   </span>
                 )}
                 {task.storyPoints == null && task.estimatedHours == null && task.actualHours == null && (
-                  <span className="text-xs font-bold text-muted-foreground opacity-50">—</span>
+                  <span className="text-xs font-bold text-muted-foreground opacity-50 hidden sm:inline-block">—</span>
                 )}
               </div>
 
               {/* Assignees */}
-              <div className="flex justify-center">
+              <div className="flex justify-end sm:justify-center">
                 {!task.assignees || task.assignees.length === 0 ? (
-                  <span className="text-xs font-bold text-muted-foreground opacity-50">—</span>
+                  <span className="text-xs font-bold text-muted-foreground opacity-50 hidden sm:inline-block">—</span>
                 ) : (
                   <div className="flex -space-x-2">
                     {task.assignees.slice(0, 3).map(({ user }) => (
@@ -177,6 +181,10 @@ export function ListView({ columns, workspaceId }: Props) {
                   </div>
                 )}
               </div>
+              </div>
+
+              {/* Mobile Wrapper 3: Due Date */}
+              <div className="flex justify-start w-full sm:w-auto sm:contents mt-2 sm:mt-0">
 
                 {/* Due Date */}
                 <div className="flex justify-start sm:justify-center ml-auto sm:ml-0">

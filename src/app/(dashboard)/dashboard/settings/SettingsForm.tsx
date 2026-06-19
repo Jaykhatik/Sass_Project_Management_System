@@ -85,7 +85,7 @@ export function SettingsForm({
         <button
           type="submit"
           disabled={loading || name === workspace.name}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          className="w-full sm:w-auto flex justify-center items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 sm:py-2 rounded-xl sm:rounded-md text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />

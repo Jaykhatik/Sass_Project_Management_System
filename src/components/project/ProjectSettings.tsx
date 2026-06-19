@@ -87,7 +87,7 @@ export function ProjectSettings({ project, isOwner }: { project: Project, isOwne
   };
 
   return (
-    <div className="max-w-xl space-y-8">
+    <div className="max-w-xl space-y-8 px-4 sm:px-0 mt-4 sm:mt-0 pb-10">
       <form onSubmit={handleSave} className="space-y-5">
         {error && (
           <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md border border-destructive/20">
@@ -142,7 +142,7 @@ export function ProjectSettings({ project, isOwner }: { project: Project, isOwne
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-sm"
+          className="flex items-center justify-center sm:justify-start gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-sm w-full sm:w-auto"
         >
           {loading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -163,7 +163,7 @@ export function ProjectSettings({ project, isOwner }: { project: Project, isOwne
           <button
             onClick={handleArchive}
             disabled={archiving}
-            className="flex items-center gap-2 border border-destructive/40 text-destructive px-3 py-1.5 rounded-md text-sm font-medium hover:bg-destructive/10 transition-colors disabled:opacity-50"
+            className="flex items-center justify-center sm:justify-start gap-2 border border-destructive/40 text-destructive px-4 py-2 rounded-xl text-sm font-medium hover:bg-destructive/10 transition-colors disabled:opacity-50 w-full sm:w-auto mt-2"
           >
             {archiving ? (
               <Loader2 className="w-4 h-4 animate-spin" />

@@ -47,7 +47,7 @@ export function SettingsClient({ workspaceId }: { workspaceId: string }) {
   return (
     <div className="space-y-8">
       {/* Labels Section */}
-      <div className="bg-card border rounded-2xl p-6 shadow-sm">
+      <div className="bg-card border rounded-2xl p-4 sm:p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-6 text-lg font-semibold border-b pb-4">
           <Tag className="w-5 h-5 text-primary" />
           <h2>Custom Labels</h2>
@@ -64,17 +64,19 @@ export function SettingsClient({ workspaceId }: { workspaceId: string }) {
                 onChange={(e) => setNewLabelName(e.target.value)}
                 className="w-full bg-muted/30 border rounded-lg px-4 py-2 outline-none focus:ring-2 ring-primary/50 text-sm"
               />
-              <div className="flex items-center gap-4">
-                <input
-                  type="color"
-                  value={newLabelColor}
-                  onChange={(e) => setNewLabelColor(e.target.value)}
-                  className="w-12 h-10 rounded cursor-pointer border-none p-0 bg-transparent"
-                />
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="shrink-0 relative rounded-lg overflow-hidden border border-border shadow-sm w-12 h-12 sm:w-12 sm:h-10">
+                  <input
+                    type="color"
+                    value={newLabelColor}
+                    onChange={(e) => setNewLabelColor(e.target.value)}
+                    className="absolute -inset-2 w-16 h-16 cursor-pointer border-none p-0 bg-transparent"
+                  />
+                </div>
                 <button
                   onClick={createLabel}
                   disabled={saving || !newLabelName.trim()}
-                  className="bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-bold flex-1 hover:bg-primary/90 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full bg-primary text-primary-foreground px-4 py-3 sm:py-2 rounded-xl sm:rounded-lg text-sm font-bold hover:bg-primary/90 transition flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Plus className="w-4 h-4" /> Add Label</>}
                 </button>
