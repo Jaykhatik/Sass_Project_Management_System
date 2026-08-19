@@ -2,7 +2,8 @@ import axios from "axios";
 import { cookies } from "next/headers";
 import { PROJECT_API_ROUTES } from "./api/routes";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
 
 const getAuthHeaders = async (): Promise<Record<string, string>> => {
   const cookieStore = await cookies();
@@ -23,7 +24,7 @@ export const getProjects = async (workspaceId: string) => {
   try {
     const res = await axios.get(
       `${API_BASE}${PROJECT_API_ROUTES.projects}?workspaceId=${workspaceId}`,
-      { headers }
+      { headers },
     );
     return res.data;
   } catch (error: any) {
@@ -40,14 +41,14 @@ export const getProject = async (workspaceId: string, projectId: string) => {
   try {
     const res = await axios.get(
       `${API_BASE}${PROJECT_API_ROUTES.projectById(projectId)}?workspaceId=${workspaceId}`,
-      { 
+      {
         headers: {
           ...headers,
           "Cache-Control": "no-cache",
-          "Pragma": "no-cache",
-          "Expires": "0"
-        }
-      }
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      },
     );
     return res.data;
   } catch (error: any) {
@@ -68,7 +69,7 @@ export const updateProject = async (
     const res = await axios.patch(
       `${API_BASE}${PROJECT_API_ROUTES.projectById(projectId)}`,
       data,
-      { headers }
+      { headers },
     );
     return res.data;
   } catch (error: any) {
@@ -88,7 +89,7 @@ export const archiveProject = async (
   try {
     const res = await axios.delete(
       `${API_BASE}${PROJECT_API_ROUTES.projectById(projectId)}?workspaceId=${workspaceId}`,
-      { headers }
+      { headers },
     );
     return res.data;
   } catch (error: any) {

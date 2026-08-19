@@ -22,7 +22,10 @@ export const login = async (data: Record<string, string>) => {
  */
 export const register = async (data: Record<string, any>) => {
   try {
-    const res = await axios.post(`${API_BASE}${AUTH_API_ROUTES.register}`, data);
+    const res = await axios.post(
+      `${API_BASE}${AUTH_API_ROUTES.register}`,
+      data,
+    );
     return res.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.error || "Failed to create account");
@@ -35,7 +38,11 @@ export const register = async (data: Record<string, any>) => {
  */
 export const logout = async () => {
   try {
-    await axios.post(`${API_BASE}${AUTH_API_ROUTES.logout}`, {}, { withCredentials: true });
+    await axios.post(
+      `${API_BASE}${AUTH_API_ROUTES.logout}`,
+      {},
+      { withCredentials: true },
+    );
   } catch (error) {
     throw new Error("Failed to logout");
   }
@@ -47,7 +54,11 @@ export const logout = async () => {
  */
 export const refreshSession = async () => {
   try {
-    await axios.post(`${API_BASE}${AUTH_API_ROUTES.refresh}`, {}, { withCredentials: true });
+    await axios.post(
+      `${API_BASE}${AUTH_API_ROUTES.refresh}`,
+      {},
+      { withCredentials: true },
+    );
   } catch (error) {
     throw new Error("Failed to refresh session");
   }

@@ -23,11 +23,18 @@ export interface SearchResults {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
 
-export async function globalSearch(workspaceId: string, query: string): Promise<SearchResults> {
+export async function globalSearch(
+  workspaceId: string,
+  query: string,
+): Promise<SearchResults> {
   try {
-    const response = await axios.get(`${API_BASE}${WORKSPACE_API_ROUTES.search(workspaceId)}?q=${encodeURIComponent(query)}`);
+    const response = await axios.get(
+      `${API_BASE}${WORKSPACE_API_ROUTES.search(workspaceId)}?q=${encodeURIComponent(query)}`,
+    );
     return response.data;
   } catch (error: any) {
-    throw new Error(error.response?.data?.error || "Failed to perform global search");
+    throw new Error(
+      error.response?.data?.error || "Failed to perform global search",
+    );
   }
 }

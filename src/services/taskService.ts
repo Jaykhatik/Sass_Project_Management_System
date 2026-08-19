@@ -30,9 +30,19 @@ export const createTask = async (data: {
  * Updates properties of an existing task (status, assignees, labels, etc).
  * Used in: `src/components/project/BoardView.tsx`, `src/components/task/TaskModal.tsx`, `src/app/(dashboard)/dashboard/tasks/MyTasksClient.tsx`
  */
-export const updateTask = async (taskId: string, data: Partial<Task> & { workspaceId: string; assigneeIds?: string[]; labelIds?: string[] }) => {
+export const updateTask = async (
+  taskId: string,
+  data: Partial<Task> & {
+    workspaceId: string;
+    assigneeIds?: string[];
+    labelIds?: string[];
+  },
+) => {
   try {
-    const res = await axios.patch(`${API_BASE}${TASK_API_ROUTES.taskById(taskId)}`, data);
+    const res = await axios.patch(
+      `${API_BASE}${TASK_API_ROUTES.taskById(taskId)}`,
+      data,
+    );
     return res.data as Task;
   } catch (error: any) {
     throw new Error(error.response?.data?.error || "Failed to update task");
@@ -45,7 +55,9 @@ export const updateTask = async (taskId: string, data: Partial<Task> & { workspa
  */
 export const deleteTask = async (taskId: string, workspaceId: string) => {
   try {
-    const res = await axios.delete(`${API_BASE}${TASK_API_ROUTES.taskById(taskId)}?workspaceId=${workspaceId}`);
+    const res = await axios.delete(
+      `${API_BASE}${TASK_API_ROUTES.taskById(taskId)}?workspaceId=${workspaceId}`,
+    );
     return res.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.error || "Failed to delete task");
@@ -59,10 +71,13 @@ export const deleteTask = async (taskId: string, workspaceId: string) => {
 export const reorderTasks = async (
   boardId: string,
   workspaceId: string,
-  tasks: { id: string; columnId: string; position: number }[]
+  tasks: { id: string; columnId: string; position: number }[],
 ) => {
   try {
-    const res = await axios.patch(`${API_BASE}${TASK_API_ROUTES.reorder(boardId)}`, { workspaceId, tasks });
+    const res = await axios.patch(
+      `${API_BASE}${TASK_API_ROUTES.reorder(boardId)}`,
+      { workspaceId, tasks },
+    );
     return res.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.error || "Failed to reorder tasks");
@@ -75,7 +90,9 @@ export const reorderTasks = async (
  */
 export const getTaskById = async (taskId: string, workspaceId: string) => {
   try {
-    const res = await axios.get(`${API_BASE}${TASK_API_ROUTES.taskById(taskId)}?workspaceId=${workspaceId}`);
+    const res = await axios.get(
+      `${API_BASE}${TASK_API_ROUTES.taskById(taskId)}?workspaceId=${workspaceId}`,
+    );
     return res.data as Task;
   } catch (error: any) {
     throw new Error("Failed to fetch task");
@@ -88,7 +105,11 @@ export const getTaskById = async (taskId: string, workspaceId: string) => {
  */
 export const getAllTasks = async (
   workspaceId: string,
-  options?: { assigneeId?: string; projectId?: string; sprintId?: string | null }
+  options?: {
+    assigneeId?: string;
+    projectId?: string;
+    sprintId?: string | null;
+  },
 ) => {
   let url = `${API_BASE}${TASK_API_ROUTES.tasks}?workspaceId=${workspaceId}`;
   if (options?.assigneeId) url += `&assigneeId=${options.assigneeId}`;
@@ -99,9 +120,9 @@ export const getAllTasks = async (
     const res = await axios.get(url, {
       headers: {
         "Cache-Control": "no-cache",
-        "Pragma": "no-cache",
-        "Expires": "0"
-      }
+        Pragma: "no-cache",
+        Expires: "0",
+      },
     });
     return res.data as Task[];
   } catch (error: any) {
@@ -113,9 +134,15 @@ export const getAllTasks = async (
  * Creates a nested subtask under a parent task.
  * Used in: `src/components/task/TaskModal.tsx`
  */
-export const createSubtask = async (taskId: string, data: { title: string; priority?: string; status?: string }) => {
+export const createSubtask = async (
+  taskId: string,
+  data: { title: string; priority?: string; status?: string },
+) => {
   try {
-    const res = await axios.post(`${API_BASE}${TASK_API_ROUTES.subtasks(taskId)}`, data);
+    const res = await axios.post(
+      `${API_BASE}${TASK_API_ROUTES.subtasks(taskId)}`,
+      data,
+    );
     return res.data as Task;
   } catch (error: any) {
     throw new Error("Failed to create subtask");
@@ -126,12 +153,17 @@ export const createSubtask = async (taskId: string, data: { title: string; prior
  * Adds a blocking dependency to a task.
  * Used in: `src/components/task/TaskModal.tsx`
  */
-export const addDependency = async (taskId: string, dependentTaskId: string) => {
+export const addDependency = async (
+  taskId: string,
+  dependentTaskId: string,
+) => {
   try {
-    const res = await axios.post(`${API_BASE}${TASK_API_ROUTES.dependencies(taskId)}`, { dependentTaskId });
+    const res = await axios.post(
+      `${API_BASE}${TASK_API_ROUTES.dependencies(taskId)}`,
+      { dependentTaskId },
+    );
     return res.data as Task;
   } catch (error: any) {
     throw new Error(error.response?.data?.error || "Failed to add dependency");
   }
 };
-
