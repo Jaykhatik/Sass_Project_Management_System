@@ -82,6 +82,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(responsePayload);
   } catch (error: unknown) {
+    console.error("Login Error:", error);
     if (error instanceof AppError) {
       return NextResponse.json(
         { error: error.message, code: error.code },
