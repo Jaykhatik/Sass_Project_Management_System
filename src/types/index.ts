@@ -6,7 +6,8 @@ export interface User {
 }
 
 export interface WorkspaceMember {
-  membership_id: string;
+  id?: string;
+  membership_id?: string;
   role: string;
   joinedAt: Date | string;
   user: User;
