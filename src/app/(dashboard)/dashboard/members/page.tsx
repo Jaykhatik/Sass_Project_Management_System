@@ -1,48 +1,44 @@
 import { MemberList } from './MemberList';
 import { getPrimaryWorkspaceForUser, getSessionUser } from '@/lib/auth';
 import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
+import prisma from "@/lib/prisma";
 
 export const metadata = {
   title: 'Members | SaaS Project Management',
 };
 
 async function getMembers(workspaceId: string) {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map(({ name, value }) => `${name}=${value}`)
-    .join('; ');
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/workspaces/${workspaceId}/members`,
-    {
-      cache: 'no-store',
-      headers: cookieHeader ? { Cookie: cookieHeader } : {},
-    }
-  );
-
-  if (!res.ok) throw new Error('Failed to fetch members');
-  return res.json();
+  try {
+    const members = await prisma.workspaceMember.findMany({
+      where: { workspace_id: workspaceId },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, avatarUrl: true },
+        },
+      },
+      orderBy: { created_at: "asc" },
+    });
+    return members;
+  } catch {
+    return [];
+  }
 }
 
 async function getInvites(workspaceId: string) {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map(({ name, value }) => `${name}=${value}`)
-    .join('; ');
-
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/workspaces/${workspaceId}/invites`,
-    {
-      cache: 'no-store',
-      headers: cookieHeader ? { Cookie: cookieHeader } : {},
-    }
-  );
-
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const invites = await prisma.workspaceInvite.findMany({
+      where: { workspaceId, status: "pending" },
+      include: {
+        inviter: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return invites;
+  } catch {
+    return [];
+  }
 }
 
 export default async function MembersPage() {
