@@ -8,6 +8,7 @@ import { TaskCard } from "@/components/task/TaskCard";
 import { BurndownChart } from "@/components/project/BurndownChart";
 import { Plus, MoreHorizontal, CheckCircle2, Play, Archive } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface Props {
   workspaceId: string;
@@ -45,8 +46,9 @@ export function BacklogView({ workspaceId, projectId, project }: Props) {
       const name = `Sprint ${sprints.length + 1}`;
       const newSprint = await createSprint(workspaceId, projectId, { name });
       setSprints([...sprints, newSprint]);
+      toast.success("Sprint created");
     } catch (error: any) {
-      alert(error.message || "Failed to create sprint");
+      toast.error(error.message || "Failed to create sprint");
     }
   };
 
@@ -56,8 +58,9 @@ export function BacklogView({ workspaceId, projectId, project }: Props) {
     try {
       const started = await startSprint(workspaceId, sprintId, { startDate, endDate });
       setSprints(sprints.map(s => s.id === sprintId ? started : s));
+      toast.success("Sprint started");
     } catch (error: any) {
-      alert(error.message || "Failed to start sprint");
+      toast.error(error.message || "Failed to start sprint");
     }
   };
 
@@ -65,9 +68,10 @@ export function BacklogView({ workspaceId, projectId, project }: Props) {
     if (!confirm("Are you sure you want to complete this sprint? Unfinished tasks will be moved to the backlog.")) return;
     try {
       await completeSprint(workspaceId, sprintId, "move_to_backlog");
+      toast.success("Sprint completed");
       fetchData(); // Refresh everything
     } catch (error: any) {
-      alert(error.message || "Failed to complete sprint");
+      toast.error(error.message || "Failed to complete sprint");
     }
   };
 
@@ -86,19 +90,12 @@ export function BacklogView({ workspaceId, projectId, project }: Props) {
 
     if (!taskId || normalizedSourceSprintId === normalizedTargetSprintId) return;
 
-    // We need to fetch tasks manually since the sprint object only has basic task fields, 
-    // but for the UI we want to optimistic update. It's easier to just refresh for now
-    // or perform a simple optimistic update.
     try {
-      await updateTask(taskId, { workspaceId, sprintId: normalizedTargetSprintId || undefined });
-      // Remove sprintId to set to null for backlog is not supported via undefined, we need an explicit null in API. 
-      // Wait, in my API update logic: `...(body.sprintId !== undefined && { sprintId: body.sprintId })`. 
-      // If `body.sprintId` is `null`, it passes `!== undefined` and updates to `null`.
-      // The updateTask interface is Partial<Task>. Let's typecast.
       await updateTask(taskId, { workspaceId, sprintId: normalizedTargetSprintId } as any);
+      toast.success("Task sprint updated");
       fetchData();
     } catch (error: any) {
-      alert(error.message || "Failed to move task");
+      toast.error(error.message || "Failed to move task");
     }
   };
 

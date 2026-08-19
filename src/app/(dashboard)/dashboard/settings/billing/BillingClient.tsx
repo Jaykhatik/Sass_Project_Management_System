@@ -8,11 +8,65 @@ export function BillingClient({ workspaceId, currentMembers, currentProjects }: 
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  const [showCanceledBanner, setShowCanceledBanner] = useState(false);
   const searchParams = useSearchParams();
 
   useEffect(() => {
     fetchSubscription();
-  }, []);
+
+    if (searchParams.get("success") === "true") {
+      setShowSuccessBanner(true);
+      const timer = setTimeout(() => {
+        setShowSuccessBanner(false);
+        if (typeof window !== "undefined") {
+          const url = new URL(window.location.href);
+          url.searchParams.delete("success");
+          window.history.replaceState({}, "", url.pathname);
+        }
+      }, 5000);
+
+      const syncTimer = setTimeout(() => {
+        fetchSubscription();
+      }, 1500);
+
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(syncTimer);
+      };
+    }
+
+    if (searchParams.get("canceled") === "true") {
+      setShowCanceledBanner(true);
+      const timer = setTimeout(() => {
+        setShowCanceledBanner(false);
+        if (typeof window !== "undefined") {
+          const url = new URL(window.location.href);
+          url.searchParams.delete("canceled");
+          window.history.replaceState({}, "", url.pathname);
+        }
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
+
+  const dismissSuccess = () => {
+    setShowSuccessBanner(false);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("success");
+      window.history.replaceState({}, "", url.pathname);
+    }
+  };
+
+  const dismissCanceled = () => {
+    setShowCanceledBanner(false);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("canceled");
+      window.history.replaceState({}, "", url.pathname);
+    }
+  };
 
   const fetchSubscription = async () => {
     try {
@@ -56,22 +110,37 @@ export function BillingClient({ workspaceId, currentMembers, currentProjects }: 
   const isPro = subscription?.plan === "pro";
   const status = subscription?.status || "active";
 
-  const successMessage = searchParams.get("success") === "true";
-  const canceledMessage = searchParams.get("canceled") === "true";
-
   return (
     <div className="space-y-6">
-      {successMessage && (
-        <div className="bg-green-500/10 text-green-500 p-4 rounded-lg flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5" />
-          <p className="font-medium text-sm">Subscription updated successfully! Thank you for going Pro.</p>
+      {showSuccessBanner && (
+        <div className="bg-green-500/10 text-green-500 p-4 rounded-lg flex items-center justify-between gap-3 animate-in fade-in duration-300">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 shrink-0" />
+            <p className="font-medium text-sm">Subscription updated successfully! Thank you for going Pro.</p>
+          </div>
+          <button
+            onClick={dismissSuccess}
+            className="text-green-500 hover:text-green-700 p-1 rounded-md transition-colors"
+            aria-label="Dismiss banner"
+          >
+            <span className="font-bold text-base leading-none">&times;</span>
+          </button>
         </div>
       )}
-      
-      {canceledMessage && (
-        <div className="bg-amber-500/10 text-amber-500 p-4 rounded-lg flex items-center gap-3">
-          <ShieldAlert className="w-5 h-5" />
-          <p className="font-medium text-sm">Checkout was canceled. You have not been charged.</p>
+
+      {showCanceledBanner && (
+        <div className="bg-amber-500/10 text-amber-500 p-4 rounded-lg flex items-center justify-between gap-3 animate-in fade-in duration-300">
+          <div className="flex items-center gap-3">
+            <ShieldAlert className="w-5 h-5 shrink-0" />
+            <p className="font-medium text-sm">Checkout was canceled. You have not been charged.</p>
+          </div>
+          <button
+            onClick={dismissCanceled}
+            className="text-amber-500 hover:text-amber-700 p-1 rounded-md transition-colors"
+            aria-label="Dismiss banner"
+          >
+            <span className="font-bold text-base leading-none">&times;</span>
+          </button>
         </div>
       )}
 

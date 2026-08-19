@@ -120,7 +120,7 @@ export function CommandMenu({ workspaceId, isOpen, setIsOpen }: CommandMenuProps
     if (item.type === "task") {
       router.push(`/dashboard/tasks?taskId=${item.id}`);
     } else if (item.type === "project") {
-      router.push(`/dashboard/projects/${item.id}/board`);
+      router.push(`/dashboard/projects/${item.id}`);
     } else if (item.type === "member") {
       router.push(`/dashboard/members`);
     }

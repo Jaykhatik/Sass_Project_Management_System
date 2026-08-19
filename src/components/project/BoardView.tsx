@@ -9,6 +9,7 @@ import { TaskModal } from "@/components/task/TaskModal";
 import { reorderTasks, updateTask } from "@/services/taskService";
 import { Column, Task } from "@/types";
 import { cn } from "@/lib/utils";
+import toast from "react-hot-toast";
 
 interface Props {
   columns: Column[];
@@ -96,7 +97,7 @@ export function BoardView({ columns: initialColumns, workspaceId, projectId, boa
       });
       router.refresh();
     } catch (err: any) {
-      alert(err.message || "Failed to move task. You might not have permission.");
+      toast.error(err.message || "Failed to move task. You might not have permission.");
       setColumns(previousColumns);
     }
   };

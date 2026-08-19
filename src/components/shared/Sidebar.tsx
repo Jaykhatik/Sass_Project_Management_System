@@ -33,7 +33,7 @@ const navLinks = [
   { name: "Billing", href: "/dashboard/settings/billing", icon: CreditCard },
 ];
 
-export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
+export function Sidebar({ workspaceSlug, isOwner = true }: { workspaceSlug?: string; isOwner?: boolean }) {
   const displaySlug = workspaceSlug || "Workspace";
   const isSidebarOpen = useSelector((state: RootState) => state.ui.isSidebarOpen);
   const dispatch = useDispatch();
@@ -103,7 +103,9 @@ export function Sidebar({ workspaceSlug }: { workspaceSlug?: string }) {
 
         {/* ── Nav Links ── */}
         <nav className="flex-1 py-5 px-3 space-y-0.5 overflow-y-auto">
-          {navLinks.map((link) => {
+          {navLinks
+            .filter((link) => link.href !== "/dashboard/settings/billing" || isOwner)
+            .map((link) => {
             const Icon = link.icon;
             const isActive =
               link.href === "/dashboard" || link.href === "/dashboard/settings"

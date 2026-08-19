@@ -13,6 +13,7 @@ const MDEditor = dynamic(
 );
 
 import ReactMarkdown from "react-markdown";
+import toast from "react-hot-toast";
 
 function formatDistanceToNowNative(dateString: string) {
   const date = new Date(dateString);
@@ -83,9 +84,10 @@ export function TaskTimeline({ taskId, workspaceId, currentUser, members }: Prop
       } else {
         setNewComment("");
       }
+      toast.success("Comment posted successfully");
       await fetchTimeline();
     } catch (error) {
-      alert("Failed to post comment");
+      toast.error("Failed to post comment");
     } finally {
       setPosting(false);
     }
@@ -98,9 +100,10 @@ export function TaskTimeline({ taskId, workspaceId, currentUser, members }: Prop
       await updateComment(workspaceId, taskId, commentId, editContent.trim());
       setEditingId(null);
       setEditContent("");
+      toast.success("Comment updated");
       await fetchTimeline();
     } catch (error: any) {
-      alert(error.message || "Failed to update comment");
+      toast.error(error.message || "Failed to update comment");
     } finally {
       setPosting(false);
     }
@@ -110,9 +113,10 @@ export function TaskTimeline({ taskId, workspaceId, currentUser, members }: Prop
     if (!confirm("Delete comment?")) return;
     try {
       await deleteComment(workspaceId, taskId, commentId);
+      toast.success("Comment deleted");
       await fetchTimeline();
     } catch (error: any) {
-      alert(error.message || "Failed to delete comment");
+      toast.error(error.message || "Failed to delete comment");
     }
   };
 

@@ -7,12 +7,23 @@ export const metadata = {
   title: 'Billing | SaaS Project Management',
 };
 
+import { redirect } from 'next/navigation';
+
 export default async function BillingPage() {
   const user = await getSessionUser();
   if (!user) notFound();
   
   const workspace = await getPrimaryWorkspaceForUser(user.id);
   if (!workspace) notFound();
+
+  const membership = await prisma.workspaceMember.findUnique({
+    where: { workspaceId_userId: { workspaceId: workspace.id, userId: user.id } }
+  });
+
+  const isOwner = workspace.ownerId === user.id || membership?.role === "owner";
+  if (!isOwner) {
+    redirect('/dashboard');
+  }
   
   const memberCount = await prisma.workspaceMember.count({
     where: { workspaceId: workspace.id }

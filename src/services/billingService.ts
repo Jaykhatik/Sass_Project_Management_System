@@ -72,18 +72,45 @@ export async function createPortalSession(workspaceId: string) {
 }
 
 export async function getCurrentSubscription(workspaceId: string) {
-  const sub = await prisma.subscription.findUnique({
+  let sub = await prisma.subscription.findUnique({
     where: { workspaceId }
   });
 
   if (!sub) {
-    return await prisma.subscription.create({
+    sub = await prisma.subscription.create({
       data: {
         workspaceId,
         plan: "free",
         status: "active"
       }
     });
+  }
+
+  // Fallback sync: If local database says "free" but user has a stripeCustomerId, check Stripe directly
+  if (sub.plan === "free" && sub.stripeCustomerId) {
+    try {
+      const activeSubs = await stripe.subscriptions.list({
+        customer: sub.stripeCustomerId,
+        status: "active",
+        limit: 1,
+      });
+
+      if (activeSubs.data.length > 0) {
+        const activeSub = activeSubs.data[0];
+        sub = await prisma.subscription.update({
+          where: { workspaceId },
+          data: {
+            plan: "pro",
+            status: activeSub.status,
+            stripeSubscriptionId: activeSub.id,
+            currentPeriodStart: new Date((activeSub as any).current_period_start * 1000),
+            currentPeriodEnd: new Date((activeSub as any).current_period_end * 1000),
+          },
+        });
+      }
+    } catch (e) {
+      console.error("Error performing Stripe fallback sync:", e);
+    }
   }
 
   return sub;

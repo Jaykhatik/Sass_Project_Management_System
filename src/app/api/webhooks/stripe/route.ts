@@ -30,45 +30,84 @@ export async function POST(req: Request) {
       if (session.subscription) {
         const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
         const customerId = session.customer as string;
+        const workspaceId = session.client_reference_id;
+
+        const sub = workspaceId
+          ? await prisma.subscription.findUnique({ where: { workspaceId } })
+          : await prisma.subscription.findFirst({ where: { stripeCustomerId: customerId } });
+
+        if (sub) {
+          await prisma.subscription.update({
+            where: { id: sub.id },
+            data: {
+              plan: "pro",
+              status: subscription.status,
+              stripeCustomerId: customerId,
+              stripeSubscriptionId: subscription.id,
+              currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+              currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+            },
+          });
+        }
+      }
+    }
+
+    if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
+      const subscription = event.data.object as Stripe.Subscription;
+      const customerId = subscription.customer as string;
+
+      const sub = await prisma.subscription.findFirst({
+        where: {
+          OR: [
+            { stripeSubscriptionId: subscription.id },
+            { stripeCustomerId: customerId }
+          ]
+        }
+      });
+
+      if (sub) {
+        const isProPrice = subscription.items.data.some(
+          (item) => item.price.id === process.env.STRIPE_PRO_PRICE_ID
+        );
+        const isPro = (isProPrice || subscription.status === "active") && subscription.status !== "canceled";
 
         await prisma.subscription.update({
-          where: { stripeCustomerId: customerId },
+          where: { id: sub.id },
           data: {
-            plan: "pro",
+            plan: isPro ? "pro" : "free",
             status: subscription.status,
             stripeSubscriptionId: subscription.id,
+            stripeCustomerId: customerId,
             currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
             currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+            cancelAtPeriodEnd: subscription.cancel_at_period_end,
           },
         });
       }
     }
 
-    if (event.type === "customer.subscription.updated") {
-      const subscription = event.data.object as Stripe.Subscription;
-
-      await prisma.subscription.update({
-        where: { stripeSubscriptionId: subscription.id },
-        data: {
-          plan: subscription.items.data[0].price.id === process.env.STRIPE_PRO_PRICE_ID ? "pro" : "free",
-          status: subscription.status,
-          currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
-          currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
-          cancelAtPeriodEnd: subscription.cancel_at_period_end,
-        },
-      });
-    }
-
     if (event.type === "customer.subscription.deleted") {
       const subscription = event.data.object as Stripe.Subscription;
+      const customerId = subscription.customer as string;
 
-      await prisma.subscription.update({
-        where: { stripeSubscriptionId: subscription.id },
-        data: {
-          plan: "free",
-          status: "canceled",
-        },
+      const sub = await prisma.subscription.findFirst({
+        where: {
+          OR: [
+            { stripeSubscriptionId: subscription.id },
+            { stripeCustomerId: customerId }
+          ]
+        }
       });
+
+      if (sub) {
+        await prisma.subscription.update({
+          where: { id: sub.id },
+          data: {
+            plan: "free",
+            status: "canceled",
+          },
+        });
+      }
     }
 
     return NextResponse.json({ received: true });

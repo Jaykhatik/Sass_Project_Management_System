@@ -6,6 +6,7 @@ import { getAttachments, uploadAttachment, deleteAttachment } from "@/services/a
 import { Paperclip, File, Image as ImageIcon, X, Loader2, Download, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import toast from "react-hot-toast";
 
 interface TaskAttachmentsProps {
   taskId: string;
@@ -64,9 +65,10 @@ export default function TaskAttachments({ taskId, currentUser }: TaskAttachments
       try {
         const newAttachment = await uploadAttachment(taskId, file);
         setAttachments(prev => [...prev, newAttachment]);
+        toast.success(`Uploaded ${file.name}`);
       } catch (error) {
         console.error("Upload failed for", file.name, error);
-        alert(`Failed to upload ${file.name}`);
+        toast.error(`Failed to upload ${file.name}`);
       }
     }
     setIsUploading(false);
@@ -79,8 +81,9 @@ export default function TaskAttachments({ taskId, currentUser }: TaskAttachments
     try {
       await deleteAttachment(taskId, attachmentId);
       setAttachments(prev => prev.filter(a => a.id !== attachmentId));
+      toast.success("Attachment deleted");
     } catch (error: any) {
-      alert(error.message || "Failed to delete attachment");
+      toast.error(error.message || "Failed to delete attachment");
     }
   };
 

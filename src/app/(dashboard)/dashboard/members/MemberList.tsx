@@ -8,6 +8,7 @@ import { WorkspaceMember } from "@/types";
 import { updateMemberRole, deleteMember } from "@/services/workspaceService";
 import { revokeInvite } from "@/services/inviteService";
 import { InviteMemberModal } from "@/components/workspace/InviteMemberModal";
+import toast from "react-hot-toast";
 
 export function MemberList({
   initialMembers,
@@ -38,10 +39,11 @@ export function MemberList({
           m.user.id === userId ? { ...m, role: updated.role } : m,
         ),
       );
+      toast.success("Member role updated");
       router.refresh();
     } catch (error: unknown) {
       if (error instanceof Error) {
-        alert(error.message);
+        toast.error(error.message);
       }
     } finally {
       setLoadingId(null);
@@ -55,10 +57,11 @@ export function MemberList({
     try {
       await deleteMember(workspaceId, userId);
       setMembers(members.filter((m) => m.user.id !== userId));
+      toast.success("Member removed from workspace");
       router.refresh();
     } catch (error: unknown) {
       if (error instanceof Error) {
-        alert(error.message);
+        toast.error(error.message);
       }
     } finally {
       setLoadingId(null);
@@ -71,9 +74,10 @@ export function MemberList({
     try {
       await revokeInvite(workspaceId, inviteId);
       setInvites(invites.filter((i) => i.id !== inviteId));
+      toast.success("Invitation revoked");
       router.refresh();
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setLoadingId(null);
     }

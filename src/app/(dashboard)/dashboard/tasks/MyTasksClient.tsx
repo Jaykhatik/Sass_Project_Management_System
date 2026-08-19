@@ -84,6 +84,7 @@ import {
 import { TaskModal } from "@/components/task/TaskModal";
 import { useSearchParams } from "next/navigation";
 import { getAllTasks, updateTask, deleteTask } from "@/services/taskService";
+import toast from "react-hot-toast";
 
 interface Props {
   workspaceId: string;
@@ -195,16 +196,18 @@ export function MyTasksClient({ workspaceId, userId }: Props) {
         for (const id of Array.from(selectedTasks)) {
           await deleteTask(id, workspaceId);
         }
+        toast.success("Selected tasks deleted");
       } else if (action.startsWith("status:")) {
         const status = action.split(":")[1];
         for (const id of Array.from(selectedTasks)) {
           await updateTask(id, { workspaceId, status });
         }
+        toast.success("Task status updated");
       }
       await fetchTasks();
       setSelectedTasks(new Set());
     } catch (error: any) {
-      alert(error.message || "Bulk action failed. You might not have permission to modify some of these tasks.");
+      toast.error(error.message || "Bulk action failed. You might not have permission to modify some of these tasks.");
     } finally {
       setBulkActionLoading(false);
     }

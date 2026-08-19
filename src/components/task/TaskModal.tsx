@@ -10,6 +10,7 @@ import { getCurrentUser } from "@/services/authService";
 import dynamic from "next/dynamic";
 import { TaskTimeline } from "./TaskTimeline";
 import TaskAttachments from "./TaskAttachments";
+import toast from "react-hot-toast";
 
 const MDEditor = dynamic(
   () => import("@uiw/react-md-editor").then((mod) => mod.default),
@@ -245,7 +246,7 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
       setCurrentUser(userData?.user);
       setLoading(false);
     }).catch(err => {
-      alert("This task was not found or has been deleted.");
+      toast.error("This task was not found or has been deleted.");
       onClose();
     });
   }, [taskId, workspaceId]);
@@ -258,7 +259,7 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
       setTask(updated);
       onUpdated(updated);
     } catch (err: any) {
-      alert(err.message || "Failed to update assignees. You might not have permission.");
+      toast.error(err.message || "Failed to update assignees. You might not have permission.");
     } finally {
       setSaving(false);
     }
@@ -285,7 +286,7 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
       setTask(updated);
       onUpdated(updated);
     } catch (err: any) {
-      alert(err.message || "Failed to update task. You might not have permission.");
+      toast.error(err.message || "Failed to update task. You might not have permission.");
     } finally {
       setSaving(false);
     }
@@ -296,10 +297,11 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
     setSaving(true);
     try {
       await deleteTask(taskId, workspaceId);
+      toast.success("Task deleted successfully");
       onDeleted(taskId);
       onClose();
     } catch (error: any) {
-      alert(error.message || "Failed to delete task. You might not have permission.");
+      toast.error(error.message || "Failed to delete task. You might not have permission.");
     } finally {
       setSaving(false);
     }
@@ -549,7 +551,7 @@ export function TaskModal({ taskId, workspaceId, onClose, onUpdated, onDeleted }
                     setTask(updatedTask);
                     onUpdated(updatedTask);
                   } catch (err: any) {
-                    alert(err.message || "Failed to add dependency");
+                    toast.error(err.message || "Failed to add dependency");
                   }
                 }}
                 options={workspaceTasks

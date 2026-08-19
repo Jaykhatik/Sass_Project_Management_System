@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 
+import { Toaster } from "react-hot-toast";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -16,6 +18,7 @@ export default function RootLayout({
     <html lang="en" className={cn("font-sans", geist.variable)} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <ReduxProvider>
+          <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
           {children}
         </ReduxProvider>
       </body>
